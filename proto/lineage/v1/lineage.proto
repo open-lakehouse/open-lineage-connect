@@ -1,0 +1,149 @@
+syntax = "proto3";
+package lineage.v1;
+
+option go_package = "github.com/open-lakehouse/open-lineage-service/gen/lineage/v1;lineagev1";
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+message RunEvent {
+  string event_type = 1 [(buf.validate.field).required = true];
+  google.protobuf.Timestamp event_time = 2 [(buf.validate.field).required = true];
+  Run run = 3;
+  Job job = 4;
+  repeated InputDataset inputs = 5;
+  repeated OutputDataset outputs = 6;
+  string producer = 7 [(buf.validate.field).required = true];
+  string raw_json = 8;
+  string schema_url = 9;
+}
+
+message JobEvent {
+  google.protobuf.Timestamp event_time = 1 [(buf.validate.field).required = true];
+  string producer = 2 [(buf.validate.field).required = true];
+  string schema_url = 3;
+  Job job = 4;
+  repeated InputDataset inputs = 5;
+  repeated OutputDataset outputs = 6;
+  string raw_json = 7;
+}
+
+message DatasetEvent {
+  google.protobuf.Timestamp event_time = 1 [(buf.validate.field).required = true];
+  string producer = 2 [(buf.validate.field).required = true];
+  string schema_url = 3;
+  StaticDataset dataset = 4;
+  string raw_json = 5;
+}
+
+message StaticDataset {
+  string namespace = 1;
+  string name = 2;
+  google.protobuf.Struct facets = 3;
+}
+
+message OpenLineageEvent {
+  oneof event {
+    RunEvent run_event = 1;
+    JobEvent job_event = 2;
+    DatasetEvent dataset_event = 3;
+  }
+}
+
+message Run {
+  string run_id = 1;
+  google.protobuf.Struct facets = 2;
+}
+
+message Job {
+  string namespace = 1;
+  string name = 2;
+  google.protobuf.Struct facets = 3;
+}
+
+message InputDataset {
+  string namespace = 1;
+  string name = 2;
+  google.protobuf.Struct facets = 3;
+  google.protobuf.Struct input_facets = 4;
+}
+
+message OutputDataset {
+  string namespace = 1;
+  string name = 2;
+  google.protobuf.Struct facets = 3;
+  google.protobuf.Struct output_facets = 4;
+}
+
+message IngestEventRequest {
+  RunEvent event = 1;
+}
+
+message IngestEventResponse {
+  string status = 1;
+}
+
+message IngestBatchRequest {
+  repeated RunEvent events = 1;
+}
+
+message IngestBatchResponse {
+  int32 ingested = 1;
+}
+
+message IngestOpenLineageBatchRequest {
+  repeated OpenLineageEvent events = 1;
+}
+
+message IngestOpenLineageBatchResponse {
+  string status = 1;
+  BatchSummary summary = 2;
+  repeated FailedEvent failed_events = 3;
+}
+
+message BatchSummary {
+  int32 received = 1;
+  int32 successful = 2;
+  int32 failed = 3;
+  int32 retriable = 4;
+  int32 non_retriable = 5;
+}
+
+message FailedEvent {
+  int32 index = 1;
+  string reason = 2;
+  bool retriable = 3;
+}
+
+message QueryLineageRequest {
+  string job_namespace = 1;
+  string job_name = 2;
+  int32 depth = 3;
+}
+
+message LineageNode {
+  string node_type = 1;
+  string namespace = 2;
+  string name = 3;
+  repeated LineageEdge edges = 4;
+}
+
+message LineageEdge {
+  string source_namespace = 1;
+  string source_name = 2;
+  string target_namespace = 3;
+  string target_name = 4;
+  string relationship = 5;
+}
+
+message QueryLineageResponse {
+  repeated LineageNode nodes = 1;
+}
+
+service LineageService {
+  rpc IngestEvent(IngestEventRequest) returns (IngestEventResponse);
+  rpc IngestBatch(IngestBatchRequest) returns (IngestBatchResponse);
+  rpc IngestOpenLineageBatch(IngestOpenLineageBatchRequest) returns (IngestOpenLineageBatchResponse);
+  rpc QueryLineage(QueryLineageRequest) returns (QueryLineageResponse);
+}

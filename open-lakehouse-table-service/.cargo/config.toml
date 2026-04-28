@@ -1,0 +1,6 @@
+[net]
+git-fetch-with-cli = true
+retry = 5
+
+[http]
+timeout = 120

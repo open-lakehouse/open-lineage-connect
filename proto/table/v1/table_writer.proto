@@ -1,0 +1,28 @@
+syntax = "proto3";
+package table.v1;
+
+option go_package = "github.com/open-lakehouse/open-lineage-service/gen/table/v1;tablewriterv1";
+
+import "lineage/v1/lineage.proto";
+
+message WriteEventRequest {
+  lineage.v1.OpenLineageEvent event = 1;
+}
+
+message WriteEventResponse {
+  string status = 1;
+}
+
+message WriteBatchRequest {
+  repeated lineage.v1.OpenLineageEvent events = 1;
+}
+
+message WriteBatchResponse {
+  string status = 1;
+  int32 written = 2;
+}
+
+service TableWriterService {
+  rpc WriteEvent(WriteEventRequest) returns (WriteEventResponse);
+  rpc WriteBatch(WriteBatchRequest) returns (WriteBatchResponse);
+}

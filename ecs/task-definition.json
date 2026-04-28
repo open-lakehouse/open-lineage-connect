@@ -1,0 +1,83 @@
+{
+  "family": "open-lakehouse",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "lineage-service",
+      "image": "${ECR_URI}/lineage-service:${IMAGE_TAG}",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8090,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "PORT", "value": "8090" },
+        { "name": "TABLE_SERVICE_URL", "value": "http://localhost:8091" }
+      ],
+      "dependsOn": [
+        {
+          "containerName": "table-service",
+          "condition": "HEALTHY"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/open-lakehouse/lineage-service",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "table-service",
+      "image": "${ECR_URI}/table-service:${IMAGE_TAG}",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8091,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "TABLE_SERVICE_PORT", "value": "8091" },
+        { "name": "DELTA_STORAGE", "value": "s3" },
+        { "name": "DELTA_TABLE_PATH", "value": "s3://${DELTA_BUCKET}/lineage-events" },
+        { "name": "DELTA_PARTITION_COLS", "value": "event_kind" },
+        { "name": "RUST_LOG", "value": "info" }
+      ],
+      "secrets": [
+        {
+          "name": "UNITY_CATALOG_URL",
+          "valueFrom": "${UNITY_CATALOG_URL_SECRET_ARN}"
+        },
+        {
+          "name": "UNITY_CATALOG_TOKEN",
+          "valueFrom": "${UNITY_CATALOG_TOKEN_SECRET_ARN}"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -sf http://localhost:8091/health || exit 1"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 15
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/open-lakehouse/table-service",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
