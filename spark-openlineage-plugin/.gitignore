@@ -1,0 +1,21 @@
+target/
+project/target/
+project/project/
+.bsp/
+.bloop/
+.metals/
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# sbt
+project/plugins/project/
+project/.sbtboot
+project/.sbtrc
+.history
+.cache
+
+# Optional: generated Java stubs are checked in for hermetic CI.
+# Uncomment the next line if you switch to regenerating them on every build.
+# src/main/generated/

@@ -1,0 +1,62 @@
+services:
+  lineage-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      PORT: "8090"
+      TABLE_SERVICE_URL: "http://table-service:8091"
+    depends_on:
+      table-service:
+        condition: service_healthy
+
+  table-service:
+    build:
+      context: .
+      dockerfile: open-lakehouse-table-service/Dockerfile
+    ports:
+      - "8091:8091"
+    environment:
+      TABLE_SERVICE_PORT: "8091"
+      DELTA_STORAGE: local
+      DELTA_TABLE_PATH: /data/events
+      DELTA_PARTITION_COLS: event_kind
+      RUST_LOG: info
+    volumes:
+      - delta-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8091/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # S3-compatible object store for integration testing.
+  # Access at http://localhost:9000 (API) / http://localhost:9001 (console).
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+  # One-shot container that creates the default bucket in MinIO.
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3 &&
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/lineage-events &&
+      echo 'Bucket lineage-events created'
+      "
+
+volumes:
+  delta-data:
