@@ -267,6 +267,7 @@ func convertStaticDataset(data json.RawMessage) (*lineagev1.StaticDataset, error
 			return nil, fmt.Errorf("facets: %w", err)
 		}
 		ds.Facets = s
+		ds.ColumnLineage = parseColumnLineageFacet(d.Facets)
 	}
 	return ds, nil
 }
@@ -288,6 +289,7 @@ func convertInputDatasets(raw []json.RawMessage) ([]*lineagev1.InputDataset, err
 				return nil, fmt.Errorf("inputs[%d].facets: %w", i, err)
 			}
 			ds.Facets = s
+			ds.ColumnLineage = parseColumnLineageFacet(d.Facets)
 		}
 		if d.InputFacets != nil {
 			s, err := toStruct(d.InputFacets)
@@ -318,6 +320,7 @@ func convertOutputDatasets(raw []json.RawMessage) ([]*lineagev1.OutputDataset, e
 				return nil, fmt.Errorf("outputs[%d].facets: %w", i, err)
 			}
 			ds.Facets = s
+			ds.ColumnLineage = parseColumnLineageFacet(d.Facets)
 		}
 		if d.OutputFacets != nil {
 			s, err := toStruct(d.OutputFacets)
@@ -329,6 +332,138 @@ func convertOutputDatasets(raw []json.RawMessage) ([]*lineagev1.OutputDataset, e
 		out = append(out, ds)
 	}
 	return out, nil
+}
+
+// parseColumnLineageFacet pulls the OpenLineage `columnLineage` facet out of a
+// raw facets map and lifts it into a typed `ColumnLineageDatasetFacet` proto.
+//
+// The same data is left in `facets` (as a `google.protobuf.Struct`) so older
+// consumers that only know about the JSON shape continue to work. The typed
+// field gives newer consumers (the Rust sidecar, Spark plugin) a structured
+// view without re-parsing arbitrary JSON.
+//
+// Returns nil when:
+//   - `raw` doesn't contain a `columnLineage` key (the common case for
+//     pre-column-lineage senders), or
+//   - the `columnLineage` value is not an object, or
+//   - the parsed facet is empty (no fields and no dataset entries).
+func parseColumnLineageFacet(raw map[string]interface{}) *lineagev1.ColumnLineageDatasetFacet {
+	if raw == nil {
+		return nil
+	}
+	cl, ok := raw["columnLineage"]
+	if !ok {
+		return nil
+	}
+	return parseColumnLineage(cl)
+}
+
+func parseColumnLineage(v interface{}) *lineagev1.ColumnLineageDatasetFacet {
+	obj, ok := v.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	facet := &lineagev1.ColumnLineageDatasetFacet{}
+
+	if fieldsRaw, ok := obj["fields"].(map[string]interface{}); ok && len(fieldsRaw) > 0 {
+		facet.Fields = make(map[string]*lineagev1.OutputFieldLineage, len(fieldsRaw))
+		for k, val := range fieldsRaw {
+			if of := parseOutputFieldLineage(val); of != nil {
+				facet.Fields[k] = of
+			}
+		}
+	}
+
+	if datasetRaw, ok := obj["dataset"].([]interface{}); ok {
+		for _, d := range datasetRaw {
+			if in := parseInputField(d); in != nil {
+				facet.Dataset = append(facet.Dataset, in)
+			}
+		}
+	}
+
+	if len(facet.Fields) == 0 && len(facet.Dataset) == 0 {
+		return nil
+	}
+	return facet
+}
+
+func parseOutputFieldLineage(v interface{}) *lineagev1.OutputFieldLineage {
+	obj, ok := v.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	out := &lineagev1.OutputFieldLineage{}
+	if inputs, ok := obj["inputFields"].([]interface{}); ok {
+		for _, i := range inputs {
+			if in := parseInputField(i); in != nil {
+				out.InputFields = append(out.InputFields, in)
+			}
+		}
+	}
+	if td, ok := obj["transformationDescription"].(string); ok {
+		out.TransformationDescription = td
+	}
+	if tt, ok := obj["transformationType"].(string); ok {
+		out.TransformationType = tt
+	}
+	if len(out.InputFields) == 0 && out.TransformationDescription == "" && out.TransformationType == "" {
+		return nil
+	}
+	return out
+}
+
+func parseInputField(v interface{}) *lineagev1.InputField {
+	obj, ok := v.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	ns, _ := obj["namespace"].(string)
+	nm, _ := obj["name"].(string)
+	fl, _ := obj["field"].(string)
+	// The OpenLineage spec marks all three of these as required on InputField.
+	// If any are missing we drop the entry rather than emit a partially-formed
+	// proto that downstream readers would have to defend against.
+	if ns == "" || nm == "" || fl == "" {
+		return nil
+	}
+	in := &lineagev1.InputField{
+		Namespace: ns,
+		Name:      nm,
+		Field:     fl,
+	}
+	if tx, ok := obj["transformations"].([]interface{}); ok {
+		for _, t := range tx {
+			if ft := parseFieldTransformation(t); ft != nil {
+				in.Transformations = append(in.Transformations, ft)
+			}
+		}
+	}
+	return in
+}
+
+func parseFieldTransformation(v interface{}) *lineagev1.FieldTransformation {
+	obj, ok := v.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	t, _ := obj["type"].(string)
+	if t == "" {
+		// `type` is the only required field on a transformation per the
+		// OpenLineage spec; anything without it is dropped.
+		return nil
+	}
+	ft := &lineagev1.FieldTransformation{Type: t}
+	if s, ok := obj["subtype"].(string); ok {
+		ft.Subtype = s
+	}
+	if d, ok := obj["description"].(string); ok {
+		ft.Description = d
+	}
+	if m, ok := obj["masking"].(bool); ok {
+		ft.Masking = m
+	}
+	return ft
 }
 
 func parseEventTime(s string) (*timestamppb.Timestamp, error) {

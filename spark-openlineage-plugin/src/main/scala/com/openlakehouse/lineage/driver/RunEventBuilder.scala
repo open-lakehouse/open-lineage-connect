@@ -32,10 +32,10 @@ final class RunEventBuilder(
       .setRun(buildRun(ctx))
       .setJob(buildJob(ctx.job))
 
-    val inputs = ctx.inputs.map(toInputDataset).asJava
+    val inputs = ctx.inputs.map(d => toInputDataset(d, ctx.columnLineage.get(d.identityKey))).asJava
     if (!inputs.isEmpty) builder.addAllInputs(inputs)
 
-    val outputs = ctx.outputs.map(toOutputDataset).asJava
+    val outputs = ctx.outputs.map(d => toOutputDataset(d, ctx.columnLineage.get(d.identityKey))).asJava
     if (!outputs.isEmpty) builder.addAllOutputs(outputs)
 
     builder.build()
@@ -58,19 +58,21 @@ final class RunEventBuilder(
       .setName(j.name)
       .build()
 
-  private def toInputDataset(d: DatasetRef): Lineage.InputDataset = {
+  private def toInputDataset(d: DatasetRef, columnLineage: Option[ColumnLineageFacet]): Lineage.InputDataset = {
     val b = Lineage.InputDataset.newBuilder()
       .setNamespace(d.namespace)
       .setName(d.name)
     if (d.facets.nonEmpty) b.setFacets(FacetEncoder.encode(d.facets + ("sourceType" -> d.sourceType)))
+    columnLineage.filter(_.nonEmpty).foreach(f => b.setColumnLineage(ColumnLineageEncoder.encode(f)))
     b.build()
   }
 
-  private def toOutputDataset(d: DatasetRef): Lineage.OutputDataset = {
+  private def toOutputDataset(d: DatasetRef, columnLineage: Option[ColumnLineageFacet]): Lineage.OutputDataset = {
     val b = Lineage.OutputDataset.newBuilder()
       .setNamespace(d.namespace)
       .setName(d.name)
     if (d.facets.nonEmpty) b.setFacets(FacetEncoder.encode(d.facets + ("sourceType" -> d.sourceType)))
+    columnLineage.filter(_.nonEmpty).foreach(f => b.setColumnLineage(ColumnLineageEncoder.encode(f)))
     b.build()
   }
 

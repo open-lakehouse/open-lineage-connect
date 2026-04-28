@@ -41,6 +41,7 @@ message StaticDataset {
   string namespace = 1;
   string name = 2;
   google.protobuf.Struct facets = 3;
+  ColumnLineageDatasetFacet column_lineage = 4;
 }
 
 message OpenLineageEvent {
@@ -67,6 +68,7 @@ message InputDataset {
   string name = 2;
   google.protobuf.Struct facets = 3;
   google.protobuf.Struct input_facets = 4;
+  ColumnLineageDatasetFacet column_lineage = 5;
 }
 
 message OutputDataset {
@@ -74,6 +76,60 @@ message OutputDataset {
   string name = 2;
   google.protobuf.Struct facets = 3;
   google.protobuf.Struct output_facets = 4;
+  ColumnLineageDatasetFacet column_lineage = 5;
+}
+
+// ColumnLineageDatasetFacet is a typed model of the OpenLineage 1-2-0
+// `ColumnLineageDatasetFacet` (https://openlineage.io/spec/facets/1-2-0/ColumnLineageDatasetFacet.json).
+//
+// Carrying it as a strong proto type — rather than burying it inside
+// `google.protobuf.Struct facets` — lets downstream Go/Rust readers consume
+// column lineage without re-parsing arbitrary JSON shapes, which is important
+// because nested struct/array columns can blow past `Struct`'s practical
+// nesting depth (~100 levels) on real-world plans.
+message ColumnLineageDatasetFacet {
+  // Per-output-field lineage, keyed by output field name.
+  map<string, OutputFieldLineage> fields = 1;
+
+  // Dataset-level dependencies that affect the whole output (filters, joins,
+  // group-by columns, sort keys, window partitioning, etc.). These do not
+  // map to a single output column.
+  repeated InputField dataset = 2;
+}
+
+// Lineage of a single output column. `inputFields` is the canonical mapping;
+// `transformation_description` and `transformation_type` mirror the deprecated
+// fields in the OpenLineage spec and are kept here for spec-completeness.
+message OutputFieldLineage {
+  repeated InputField input_fields = 1;
+  string transformation_description = 2 [deprecated = true];
+  string transformation_type = 3 [deprecated = true];
+}
+
+// A single column-level dependency on a source dataset's field.
+message InputField {
+  string namespace = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).required = true];
+  string field = 3 [(buf.validate.field).required = true];
+  repeated FieldTransformation transformations = 4;
+}
+
+// Describes the kind of transformation that connects an input field to an
+// output column.
+//
+// `type` is one of:
+//   - DIRECT   — input value flows into the output value
+//   - INDIRECT — input affects the output's row set / ordering / grouping
+// `subtype` further qualifies the transformation. Common values:
+//   IDENTITY, TRANSFORMATION, AGGREGATION, JOIN, GROUP_BY, FILTER, SORT,
+//   WINDOW, CONDITIONAL.
+// `masking` is true for transformations that intentionally remove signal
+// from the input (hashes, redactions, regexp_replace-as-mask, etc.).
+message FieldTransformation {
+  string type = 1;
+  string subtype = 2;
+  string description = 3;
+  bool masking = 4;
 }
 
 message IngestEventRequest {

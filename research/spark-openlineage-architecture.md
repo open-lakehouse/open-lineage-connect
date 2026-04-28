@@ -98,7 +98,9 @@ plugin RPC — no new ports, no new transport, no new auth plane.
 | Driver                | `RunContext`, `JobRef`, `RunStatus`        | Immutable per-run state.                                                                         |
 | Driver                | `JobNaming`                                | Derives deterministic job names with a documented precedence.                                    |
 | Driver                | `FacetEncoder`                             | Scala `Map` → `google.protobuf.Struct` (used for run / dataset facets).                          |
-| Driver                | `RunEventBuilder`                          | `RunContext` → `Lineage.RunEvent` protobuf (pure function).                                      |
+| Driver                | `ColumnLineageExtractor`                   | Walks analyzed `LogicalPlan`; produces typed `ColumnLineageDatasetFacet` per output dataset (DIRECT + INDIRECT + dataset deps). |
+| Driver                | `ColumnLineageEncoder`                     | Scala `ColumnLineageFacet` → generated Java proto builder.                                       |
+| Driver                | `RunEventBuilder`                          | `RunContext` → `Lineage.RunEvent` protobuf (pure function); attaches column-lineage facet.       |
 | Driver                | `EventSink` (`Noop`, `InMemory`, `Broadcast`, `ConnectRpcEventSink`) | Abstract destination for `RunEvent`s; `ConnectRpc*` is the production impl.                 |
 | Driver                | `TaskMetricsAggregator`                    | Aggregates `ExecutorTaskMetrics` by SQL `executionId` for terminal-event enrichment.             |
 | Shared                | `ExecutorTaskMetrics`                      | Serializable wire payload between executors and driver.                                          |
@@ -467,26 +469,59 @@ why each file exists:
 
 ---
 
-## 12. Future work
+## 12. Shipped since v1 + future work
+
+### Shipped
+
+1. **Column-level lineage.** Implemented end-to-end behind
+   `spark.openlineage.emit.columnLineage=true` (off by default).
+   `ColumnLineageExtractor` walks the analyzed plan and produces a typed
+   `ColumnLineageDatasetFacet` (OpenLineage 1-2-0 spec) for each output
+   dataset:
+   - Seeds at `LogicalRelation` / `HiveTableRelation` /
+     `DataSourceV2Relation` leaves by indexing every output
+     `AttributeReference.exprId` to its `(DatasetRef, fieldName)`.
+   - Propagates lineage through `Project`, `Aggregate`, `Window`,
+     `Generate`, `SubqueryAlias`, and `Union`, classifying each output
+     column as `DIRECT/IDENTITY`, `DIRECT/TRANSFORMATION`,
+     `DIRECT/AGGREGATION`, or flagging `masking=true` when the
+     transformation routes through `md5/sha1/sha2/mask/regexp_replace`.
+   - Collects INDIRECT dependencies (`FILTER`, `SORT`, `JOIN`,
+     `GROUP_BY`, `WINDOW`) from `Filter.condition`, `Sort.order`,
+     `Join.condition`, `Aggregate.groupingExpressions`,
+     `Window.partitionSpec` / `orderSpec` — surfaced both per-field
+     and on the top-level `dataset` deps array.
+   - The facet rides on `OutputDataset.column_lineage` (sibling of the
+     existing generic `facets` struct). `ColumnLineageEncoder` translates
+     Scala case classes to the generated Java proto builders.
+   - Wired into both `LineageQueryListener` (one extraction per query,
+     reused across START / COMPLETE / FAIL) and
+     `LineageStreamingListener` (microbatch path looks up
+     `IncrementalExecution.analyzed` reflectively). Extraction is
+     wrapped in `try/catch NonFatal` — a failure logs and ships the
+     event without column lineage.
+   - The Go converter parses the equivalent JSON facet from external
+     OpenLineage senders and lifts it into the same typed proto field.
+   - The Rust table-service writes a per-event `column_lineage_json`
+     column to Delta (see `open-lakehouse-table-service/src/writer/schema.rs`).
+
+### Future work
 
 Explicitly out of scope for this cut:
 
-1. **Column-level lineage.** Requires walking `plan.expressions` and
-   tracking `AttributeReference`s through `Project`/`Aggregate`/`Join`.
-   Ships behind `spark.openlineage.emit.columnLineage=true` when built.
-2. **User-defined facets.** `spark.openlineage.facets.run.*` /
+1. **User-defined facets.** `spark.openlineage.facets.run.*` /
    `spark.openlineage.facets.job.*` → injected into the relevant facet
    structs. Mechanically simple, just not wired.
-3. **Spark Connect true-E2E test.** Today's smoke test is a classic-mode
+2. **Spark Connect true-E2E test.** Today's smoke test is a classic-mode
    proxy. A CI job that actually starts a Connect server would close the
    remaining coverage gap; it's deferred because starting a Connect server
    in CI is non-trivial to do portably.
-4. **Hive Metastore coverage in CI.** `HiveTableRelation` is handled in
+3. **Hive Metastore coverage in CI.** `HiveTableRelation` is handled in
    code, but we don't stand up a Hive-enabled Spark in CI.
-5. **TLS + mTLS transport.** `ConnectRpcClient.defaultOkHttp()` is plain
+4. **TLS + mTLS transport.** `ConnectRpcClient.defaultOkHttp()` is plain
    HTTP. Wiring an `SSLContext` is a one-method change but needs an
    operator story for cert material.
-6. **Retry policy tuning.** Current backoff is intentionally modest; real
+5. **Retry policy tuning.** Current backoff is intentionally modest; real
    production load may want jittered backoff and per-endpoint rate limiting.
 
 ---

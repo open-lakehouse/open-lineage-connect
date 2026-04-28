@@ -66,10 +66,16 @@ private[lineage] final class LineageQueryListener(
       baseFacets += "producer"        -> "spark-openlineage-plugin"
       durationNs.foreach(d => baseFacets += "durationNs" -> d.toString)
 
+      val columnLineage =
+        if (config.emitColumnLineage)
+          safeExtractColumnLineage(plan)
+        else Map.empty[(String, String), ColumnLineageFacet]
+
       val startCtx = RunContext
         .start(job, now = clock(), executionId = executionId, facets = baseFacets.result())
         .withInputs(safeExtract(QueryPlanVisitor.extractSources(plan), "sources"))
         .withOutputs(safeExtract(QueryPlanVisitor.extractSinks(plan), "sinks"))
+        .withColumnLineage(columnLineage)
 
       // START event.
       emitSafely(startCtx)
@@ -100,6 +106,17 @@ private[lineage] final class LineageQueryListener(
       case NonFatal(t) =>
         logWarning(s"OpenLineage $label extraction failed; continuing with empty list", t)
         Seq.empty
+    }
+  }
+
+  private def safeExtractColumnLineage(
+      plan: org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+  ): Map[(String, String), ColumnLineageFacet] = {
+    try ColumnLineageExtractor.extract(plan)
+    catch {
+      case NonFatal(t) =>
+        logWarning("OpenLineage column-lineage extraction failed; continuing with empty map", t)
+        Map.empty
     }
   }
 

@@ -176,6 +176,59 @@ final class LineageQueryListenerSpec extends AnyFunSuite with SparkTestBase with
     }
   }
 
+  test("emitColumnLineage=true populates the typed ColumnLineageDatasetFacet on outputs") {
+    val (sink, listener) = attachListener(baseConfig.copy(emitColumnLineage = true))
+    try {
+      val ss = spark
+      import ss.implicits._
+      val in  = tmpDir.resolve("cl_in.parquet").toString
+      val out = tmpDir.resolve("cl_out.parquet").toString
+      Seq((1, "ada"), (2, "lin")).toDF("id", "name").write.mode("overwrite").parquet(in)
+
+      spark.read.parquet(in).select($"id", $"name".as("user_name"))
+        .write.mode("overwrite").parquet(out)
+
+      eventually {
+        val withColumnLineage = sink.events
+          .filter(_.getEventType == "START")
+          .flatMap(_.getOutputsList.asScala.toList)
+          .filter(_.getName == out)
+
+        withClue(s"captured outputs=${withColumnLineage.map(_.getName)}") {
+          withColumnLineage should not be empty
+        }
+
+        val o = withColumnLineage.head
+        o.hasColumnLineage shouldBe true
+        val fields = o.getColumnLineage.getFieldsMap
+        fields.keySet().asScala should (contain("id") and contain("user_name"))
+      }
+    } finally spark.listenerManager.unregister(listener)
+  }
+
+  test("emitColumnLineage=false leaves the typed facet unset") {
+    val (sink, listener) = attachListener()
+    try {
+      val ss = spark
+      import ss.implicits._
+      val in  = tmpDir.resolve("cl_off_in.parquet").toString
+      val out = tmpDir.resolve("cl_off_out.parquet").toString
+      Seq((1, "x")).toDF("id", "v").write.mode("overwrite").parquet(in)
+
+      spark.read.parquet(in).write.mode("overwrite").parquet(out)
+
+      eventually {
+        val outputs = sink.events
+          .flatMap(_.getOutputsList.asScala.toList)
+          .filter(_.getName == out)
+        withClue(s"captured outputs=${outputs.map(_.getName)}") {
+          outputs should not be empty
+        }
+        outputs.foreach(o => o.hasColumnLineage shouldBe false)
+      }
+    } finally spark.listenerManager.unregister(listener)
+  }
+
   test("disabled config short-circuits without emitting anything") {
     val (sink, listener) = attachListener(baseConfig.copy(disabled = true))
     try {

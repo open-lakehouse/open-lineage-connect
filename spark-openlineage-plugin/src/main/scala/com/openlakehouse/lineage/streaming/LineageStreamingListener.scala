@@ -13,8 +13,20 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.streaming.{StreamingQueryListener, StreamingQueryProgress}
 import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent, QueryStartedEvent, QueryTerminatedEvent}
 
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+
 import com.openlakehouse.lineage.LineageConfig
-import com.openlakehouse.lineage.driver.{DatasetRef, EventSink, JobNaming, JobRef, RunContext, RunEventBuilder, RunStatus}
+import com.openlakehouse.lineage.driver.{
+  ColumnLineageExtractor,
+  ColumnLineageFacet,
+  DatasetRef,
+  EventSink,
+  JobNaming,
+  JobRef,
+  RunContext,
+  RunEventBuilder,
+  RunStatus
+}
 
 /**
  * Spark `StreamingQueryListener` that turns the three lifecycle hooks of a
@@ -44,7 +56,17 @@ final class LineageStreamingListener(
     sparkConf: SparkConf,
     eventBuilder: RunEventBuilder,
     sink: EventSink,
-    clock: () => Instant = () => Instant.now()
+    clock: () => Instant = () => Instant.now(),
+    /**
+     * Optional plan lookup for column lineage. The default reaches into the
+     * active SparkSession's StreamingQueryManager and pulls
+     * `IncrementalExecution.analyzed` reflectively (the StreamExecution
+     * subclass that exposes `lastExecution` lives in
+     * `org.apache.spark.sql.execution.streaming` and is not part of the
+     * stable public API). Tests can supply a deterministic lookup.
+     */
+    planLookup: UUID => Option[LogicalPlan] =
+      LineageStreamingListener.defaultPlanLookup
 ) extends StreamingQueryListener
     with Logging {
 
@@ -81,16 +103,31 @@ final class LineageStreamingListener(
         val outputs = Option(p.sink).map(s => StreamingSourceParser.parseSink(s.description)).toSeq
         val facets  = run.ctx.facets ++ progressFacets(p)
 
+        val columnLineage =
+          if (config.emitColumnLineage)
+            planLookup(p.runId).map(safeExtractColumnLineage).getOrElse(Map.empty)
+          else Map.empty[(String, String), ColumnLineageFacet]
+
         val ctx = run.ctx
           .withInputs(inputs)
           .withOutputs(outputs)
           .withStatus(RunStatus.Running, now = clock())
           .copy(facets = facets)
+          .withColumnLineage(columnLineage)
 
         // Keep the ctx updated for the terminal event.
         run.update(ctx)
         emitSafely(ctx)
       }
+    }
+  }
+
+  private def safeExtractColumnLineage(plan: LogicalPlan): Map[(String, String), ColumnLineageFacet] = {
+    try ColumnLineageExtractor.extract(plan)
+    catch {
+      case NonFatal(t) =>
+        logWarning("OpenLineage streaming column-lineage extraction failed; continuing with empty map", t)
+        Map.empty
     }
   }
 
@@ -148,6 +185,49 @@ final class LineageStreamingListener(
 }
 
 object LineageStreamingListener {
+
+  /**
+   * Default plan lookup: ask the active SparkSession for the streaming query
+   * with the given runId, then reach for `lastExecution.analyzed` via
+   * reflection. `StreamExecution` is in
+   * `org.apache.spark.sql.execution.streaming` which Spark treats as
+   * implementation-only — reflection lets us extract the plan without a hard
+   * compile-time dependency on those internals.
+   *
+   * Returns `None` for any failure path: no active session, no query for the
+   * runId, query type lacks `lastExecution`, plan still null. Callers must
+   * tolerate `None` gracefully.
+   */
+  def defaultPlanLookup(runId: UUID): Option[LogicalPlan] = {
+    try {
+      val session = org.apache.spark.sql.SparkSession.getActiveSession
+        .orElse(org.apache.spark.sql.SparkSession.getDefaultSession)
+      session.flatMap { s =>
+        val q = s.streams.get(runId)
+        if (q == null) None else extractAnalyzedReflectively(q)
+      }
+    } catch { case NonFatal(_) => None }
+  }
+
+  private def extractAnalyzedReflectively(query: AnyRef): Option[LogicalPlan] = {
+    try {
+      val lastExec = query.getClass.getMethods
+        .find(m => m.getName == "lastExecution" && m.getParameterCount == 0)
+        .map(_.invoke(query))
+        .orNull
+      if (lastExec == null) None
+      else {
+        val analyzed = lastExec.getClass.getMethods
+          .find(m => m.getName == "analyzed" && m.getParameterCount == 0)
+          .map(_.invoke(lastExec))
+          .orNull
+        analyzed match {
+          case p: LogicalPlan => Some(p)
+          case _              => None
+        }
+      }
+    } catch { case NonFatal(_) => None }
+  }
 
   /** Per-run state. Not exposed outside the listener. */
   private final class StreamingRun(@volatile var ctx: RunContext) {

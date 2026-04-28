@@ -20,7 +20,8 @@ final class RunEventBuilderSpec extends AnyFunSuite with Matchers {
       executionId: Option[Long] = Some(7L),
       errorMessage: Option[String] = None,
       errorClass: Option[String] = None,
-      facets: Map[String, String] = Map("funcName" -> "saveAsTable")
+      facets: Map[String, String] = Map("funcName" -> "saveAsTable"),
+      columnLineage: Map[(String, String), ColumnLineageFacet] = Map.empty
   ): RunContext =
     RunContext(
       runId        = fixedUuid,
@@ -32,7 +33,8 @@ final class RunEventBuilderSpec extends AnyFunSuite with Matchers {
       executionId  = executionId,
       errorMessage = errorMessage,
       errorClass   = errorClass,
-      facets       = facets
+      facets       = facets,
+      columnLineage = columnLineage
     )
 
   private val builder =
@@ -100,5 +102,53 @@ final class RunEventBuilderSpec extends AnyFunSuite with Matchers {
     val ev = builder.build(ctx(RunStatus.Start))
     ev.getInputsList.asScala.toList  shouldBe empty
     ev.getOutputsList.asScala.toList shouldBe empty
+  }
+
+  test("column lineage attaches to outputs by (namespace, name)") {
+    val out = DatasetRef("file", "/data/out", "parquet")
+    val facet = ColumnLineageFacet(
+      fields = Map("id" -> Seq(ColumnLineageInputField("file", "/data/in", "id",
+        transformations = Seq(ColumnLineageTransformation.Identity)))),
+      dataset = Seq.empty
+    )
+    val ev = builder.build(ctx(
+      RunStatus.Complete,
+      outputs       = Seq(out),
+      columnLineage = Map(out.identityKey -> facet)
+    ))
+
+    ev.getOutputsCount shouldBe 1
+    val o = ev.getOutputs(0)
+    o.hasColumnLineage shouldBe true
+    o.getColumnLineage.getFieldsMap.size shouldBe 1
+    val cl = o.getColumnLineage.getFieldsMap.get("id")
+    cl.getInputFieldsCount shouldBe 1
+    cl.getInputFields(0).getNamespace shouldBe "file"
+    cl.getInputFields(0).getField     shouldBe "id"
+  }
+
+  test("output dataset without a matching column-lineage entry leaves the field unset") {
+    val out = DatasetRef("file", "/data/out", "parquet")
+    val ev  = builder.build(ctx(RunStatus.Complete, outputs = Seq(out)))
+    ev.getOutputs(0).hasColumnLineage shouldBe false
+  }
+
+  test("column lineage attaches to inputs when keyed by an input dataset's identity") {
+    val in = DatasetRef("file", "/data/in", "parquet")
+    val facet = ColumnLineageFacet(
+      fields = Map.empty,
+      dataset = Seq(ColumnLineageInputField("file", "/data/in", "ts",
+        transformations = Seq(ColumnLineageTransformation.Sort)))
+    )
+    val ev = builder.build(ctx(
+      RunStatus.Start,
+      inputs        = Seq(in),
+      columnLineage = Map(in.identityKey -> facet)
+    ))
+
+    val i = ev.getInputs(0)
+    i.hasColumnLineage shouldBe true
+    i.getColumnLineage.getDatasetCount shouldBe 1
+    i.getColumnLineage.getDataset(0).getField shouldBe "ts"
   }
 }

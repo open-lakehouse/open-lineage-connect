@@ -85,6 +85,40 @@ These classes are **not** in `spark-sql_2.13`. The visitor must use `Class.forNa
 | `org.apache.iceberg.spark.source.SparkWrite$*`            | `org.apache.iceberg:iceberg-spark-runtime-4.0_2.13` |
 | `org.apache.hudi.spark.*WriteSource`                      | `org.apache.hudi:hudi-spark4-bundle_2.13` |
 
+## Column-lineage extractor surface
+
+`ColumnLineageExtractor` walks the analyzed `LogicalPlan` to derive the typed
+`ColumnLineageDatasetFacet`. Every Catalyst class touched is listed here so
+the same audit cadence applies on Spark version bumps.
+
+### Catalyst expressions
+
+| Type                                           | Package                                              | What we read                                  |
+|------------------------------------------------|------------------------------------------------------|-----------------------------------------------|
+| `AttributeReference`                           | `org.apache.spark.sql.catalyst.expressions`          | `name: String`, `exprId: ExprId`              |
+| `Alias`                                        | `org.apache.spark.sql.catalyst.expressions`          | `child: Expression`, `name: String`           |
+| `NamedExpression`                              | `org.apache.spark.sql.catalyst.expressions`          | `name: String`, `toAttribute: Attribute`      |
+| `Expression.references: AttributeSet`          | `org.apache.spark.sql.catalyst.expressions`          | Walked to attribute exprIds for lineage seeds |
+| `AggregateExpression`                          | `org.apache.spark.sql.catalyst.expressions.aggregate`| Wraps `AggregateFunction`; classified as `DIRECT/AGGREGATION` |
+| `Md5` / `Sha1` / `Sha2` / `Mask` / `RegExpReplace` | `org.apache.spark.sql.catalyst.expressions`     | Heuristic for `masking=true` flag             |
+
+### Catalyst logical operators (in addition to those listed above)
+
+| Node                                  | Package                                            | What we read                                                      |
+|---------------------------------------|----------------------------------------------------|-------------------------------------------------------------------|
+| `Project`                             | `org.apache.spark.sql.catalyst.plans.logical`      | `projectList: Seq[NamedExpression]`                               |
+| `Aggregate`                           | same                                               | `aggregateExpressions`, `groupingExpressions`                     |
+| `Window`                              | same                                               | `windowExpressions`, `partitionSpec`, `orderSpec`                 |
+| `Generate`                            | same                                               | `generator: Generator`, `generatorOutput`                         |
+| `SubqueryAlias`                       | same                                               | propagates child lineage; only `alias` matters                    |
+| `Filter`                              | same                                               | `condition: Expression` (INDIRECT/FILTER)                         |
+| `Sort`                                | same                                               | `order: Seq[SortOrder]` (INDIRECT/SORT)                           |
+| `Join`                                | same                                               | `condition: Option[Expression]` (INDIRECT/JOIN)                   |
+| `Union`                               | same                                               | merges child lineage on positional output                         |
+
+The extractor calls `Expression.references` and `LogicalPlan.output` only —
+both are part of the public Catalyst surface and stable within a major.
+
 ## Key observations / risks
 
 1. **`NamedRelation.name(): String` is the unifying accessor for v2 writes.** Every `V2WriteCommand` (AppendData, OverwriteByExpression, etc.) holds its target as a `NamedRelation`, which exposes `.name()`. That's the simplest path to a dataset name without caring whether the underlying type is `DataSourceV2Relation`, `DataSourceV2ScanRelation`, or a connector-specific subclass.

@@ -389,6 +389,43 @@ func TestHandleBatch_ExampleMixedBatch(t *testing.T) {
 	}
 }
 
+func TestHandleEvent_ExampleColumnLineage(t *testing.T) {
+	srv, svc := newTestServer(t)
+	body := readExampleFile(t, "../../resources/examples/lineage/column-lineage/run-event-with-column-lineage.json")
+
+	resp, err := http.Post(srv.URL+"/lineage", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		t.Fatalf("POST /lineage failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("status = %d, want 200", resp.StatusCode)
+	}
+
+	events := svc.OpenLineageEvents()
+	if len(events) != 1 {
+		t.Fatalf("stored events = %d, want 1", len(events))
+	}
+	re := events[0].GetRunEvent()
+	if re == nil || len(re.Outputs) != 1 {
+		t.Fatalf("expected RunEvent with 1 output, got %v", re)
+	}
+	cl := re.Outputs[0].GetColumnLineage()
+	if cl == nil {
+		t.Fatal("expected typed ColumnLineage from JSON example to be parsed")
+	}
+	if _, ok := cl.Fields["customer_id"]; !ok {
+		t.Errorf("missing customer_id in fields: %+v", cl.Fields)
+	}
+	if _, ok := cl.Fields["email_hash"]; !ok {
+		t.Errorf("missing email_hash in fields: %+v", cl.Fields)
+	}
+	if len(cl.Dataset) != 1 || cl.Dataset[0].Field != "region" {
+		t.Errorf("expected one dataset entry for region, got %+v", cl.Dataset)
+	}
+}
+
 func readExampleFile(t *testing.T, path string) []byte {
 	t.Helper()
 	data, err := os.ReadFile(path)

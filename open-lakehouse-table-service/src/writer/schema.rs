@@ -4,9 +4,11 @@ use deltalake::arrow::array::{
     ArrayRef, RecordBatch, StringBuilder, TimestampMicrosecondBuilder,
 };
 use deltalake::arrow::datatypes::{DataType, Field, Schema, TimeUnit};
+use serde_json::{Map as JsonMap, Value as JsonValue};
 
 use crate::lineage::v1::{
-    DatasetEventView, InputDatasetView, JobEventView, OpenLineageEventView, OutputDatasetView,
+    ColumnLineageDatasetFacetView, DatasetEventView, FieldTransformationView, InputDatasetView,
+    InputFieldView, JobEventView, OpenLineageEventView, OutputDatasetView, OutputFieldLineageView,
     RunEventView,
 };
 
@@ -29,6 +31,12 @@ pub fn arrow_schema() -> Arc<Schema> {
         Field::new("facets_json", DataType::Utf8, true),
         Field::new("inputs_json", DataType::Utf8, true),
         Field::new("outputs_json", DataType::Utf8, true),
+        // Per-event JSON containing every input and output dataset's typed
+        // ColumnLineageDatasetFacet (when present). Null when no dataset on
+        // the event carries column lineage. The JSON shape mirrors the
+        // OpenLineage 1-2-0 spec so downstream consumers can read it without
+        // re-deriving the schema.
+        Field::new("column_lineage_json", DataType::Utf8, true),
         Field::new("raw_json", DataType::Utf8, true),
     ]))
 }
@@ -53,6 +61,7 @@ pub fn events_to_record_batch(
     let mut col_facets = StringBuilder::with_capacity(cap, cap * 128);
     let mut col_inputs = StringBuilder::with_capacity(cap, cap * 128);
     let mut col_outputs = StringBuilder::with_capacity(cap, cap * 128);
+    let mut col_column_lineage = StringBuilder::with_capacity(cap, cap * 256);
     let mut col_raw = StringBuilder::with_capacity(cap, cap * 256);
 
     for evt in events {
@@ -75,6 +84,7 @@ pub fn events_to_record_batch(
                         &mut col_facets,
                         &mut col_inputs,
                         &mut col_outputs,
+                        &mut col_column_lineage,
                         &mut col_raw,
                     ),
                     EventView::JobEvent(je) => append_job(
@@ -92,6 +102,7 @@ pub fn events_to_record_batch(
                         &mut col_facets,
                         &mut col_inputs,
                         &mut col_outputs,
+                        &mut col_column_lineage,
                         &mut col_raw,
                     ),
                     EventView::DatasetEvent(de) => append_dataset(
@@ -109,6 +120,7 @@ pub fn events_to_record_batch(
                         &mut col_facets,
                         &mut col_inputs,
                         &mut col_outputs,
+                        &mut col_column_lineage,
                         &mut col_raw,
                     ),
                 }
@@ -131,6 +143,7 @@ pub fn events_to_record_batch(
         Arc::new(col_facets.finish()),
         Arc::new(col_inputs.finish()),
         Arc::new(col_outputs.finish()),
+        Arc::new(col_column_lineage.finish()),
         Arc::new(col_raw.finish()),
     ];
 
@@ -183,6 +196,177 @@ fn output_datasets_to_json(datasets: &[OutputDatasetView<'_>]) -> Option<String>
     Some(serde_json::to_string(&arr).unwrap_or_default())
 }
 
+fn field_transformation_to_json(t: &FieldTransformationView<'_>) -> JsonValue {
+    let mut m = JsonMap::new();
+    if !t.r#type.is_empty() {
+        m.insert("type".into(), JsonValue::String(t.r#type.into()));
+    }
+    if !t.subtype.is_empty() {
+        m.insert("subtype".into(), JsonValue::String(t.subtype.into()));
+    }
+    if !t.description.is_empty() {
+        m.insert("description".into(), JsonValue::String(t.description.into()));
+    }
+    if t.masking {
+        m.insert("masking".into(), JsonValue::Bool(true));
+    }
+    JsonValue::Object(m)
+}
+
+fn input_field_to_json(f: &InputFieldView<'_>) -> JsonValue {
+    let mut m = JsonMap::new();
+    m.insert("namespace".into(), JsonValue::String(f.namespace.into()));
+    m.insert("name".into(), JsonValue::String(f.name.into()));
+    m.insert("field".into(), JsonValue::String(f.field.into()));
+    if !f.transformations.is_empty() {
+        let arr: Vec<JsonValue> = f
+            .transformations
+            .iter()
+            .map(field_transformation_to_json)
+            .collect();
+        m.insert("transformations".into(), JsonValue::Array(arr));
+    }
+    JsonValue::Object(m)
+}
+
+fn output_field_lineage_to_json(o: &OutputFieldLineageView<'_>) -> JsonValue {
+    let mut m = JsonMap::new();
+    let inputs: Vec<JsonValue> = o.input_fields.iter().map(input_field_to_json).collect();
+    m.insert("inputFields".into(), JsonValue::Array(inputs));
+    if !o.transformation_description.is_empty() {
+        m.insert(
+            "transformationDescription".into(),
+            JsonValue::String(o.transformation_description.into()),
+        );
+    }
+    if !o.transformation_type.is_empty() {
+        m.insert(
+            "transformationType".into(),
+            JsonValue::String(o.transformation_type.into()),
+        );
+    }
+    JsonValue::Object(m)
+}
+
+fn column_lineage_to_json(facet: &ColumnLineageDatasetFacetView<'_>) -> Option<JsonValue> {
+    if facet.fields.is_empty() && facet.dataset.is_empty() {
+        return None;
+    }
+    let mut m = JsonMap::new();
+    if !facet.fields.is_empty() {
+        let mut fmap = JsonMap::new();
+        for (k, v) in facet.fields.iter() {
+            fmap.insert((*k).to_string(), output_field_lineage_to_json(v));
+        }
+        m.insert("fields".into(), JsonValue::Object(fmap));
+    }
+    if !facet.dataset.is_empty() {
+        let arr: Vec<JsonValue> = facet.dataset.iter().map(input_field_to_json).collect();
+        m.insert("dataset".into(), JsonValue::Array(arr));
+    }
+    Some(JsonValue::Object(m))
+}
+
+/// Build a per-event JSON document containing the typed
+/// `ColumnLineageDatasetFacet` of every input and output that carries one.
+/// Returns `None` when no dataset on the event has column lineage attached.
+fn run_column_lineage_to_json(re: &RunEventView<'_>) -> Option<String> {
+    let inputs: Vec<JsonValue> = re
+        .inputs
+        .iter()
+        .filter_map(|d| {
+            d.column_lineage.as_option().and_then(column_lineage_to_json).map(|cl| {
+                let mut m = JsonMap::new();
+                m.insert("namespace".into(), JsonValue::String(d.namespace.into()));
+                m.insert("name".into(), JsonValue::String(d.name.into()));
+                m.insert("columnLineage".into(), cl);
+                JsonValue::Object(m)
+            })
+        })
+        .collect();
+    let outputs: Vec<JsonValue> = re
+        .outputs
+        .iter()
+        .filter_map(|d| {
+            d.column_lineage.as_option().and_then(column_lineage_to_json).map(|cl| {
+                let mut m = JsonMap::new();
+                m.insert("namespace".into(), JsonValue::String(d.namespace.into()));
+                m.insert("name".into(), JsonValue::String(d.name.into()));
+                m.insert("columnLineage".into(), cl);
+                JsonValue::Object(m)
+            })
+        })
+        .collect();
+    if inputs.is_empty() && outputs.is_empty() {
+        return None;
+    }
+    let mut m = JsonMap::new();
+    if !inputs.is_empty() {
+        m.insert("inputs".into(), JsonValue::Array(inputs));
+    }
+    if !outputs.is_empty() {
+        m.insert("outputs".into(), JsonValue::Array(outputs));
+    }
+    serde_json::to_string(&JsonValue::Object(m)).ok()
+}
+
+fn job_column_lineage_to_json(je: &JobEventView<'_>) -> Option<String> {
+    let inputs: Vec<JsonValue> = je
+        .inputs
+        .iter()
+        .filter_map(|d| {
+            d.column_lineage.as_option().and_then(column_lineage_to_json).map(|cl| {
+                let mut m = JsonMap::new();
+                m.insert("namespace".into(), JsonValue::String(d.namespace.into()));
+                m.insert("name".into(), JsonValue::String(d.name.into()));
+                m.insert("columnLineage".into(), cl);
+                JsonValue::Object(m)
+            })
+        })
+        .collect();
+    let outputs: Vec<JsonValue> = je
+        .outputs
+        .iter()
+        .filter_map(|d| {
+            d.column_lineage.as_option().and_then(column_lineage_to_json).map(|cl| {
+                let mut m = JsonMap::new();
+                m.insert("namespace".into(), JsonValue::String(d.namespace.into()));
+                m.insert("name".into(), JsonValue::String(d.name.into()));
+                m.insert("columnLineage".into(), cl);
+                JsonValue::Object(m)
+            })
+        })
+        .collect();
+    if inputs.is_empty() && outputs.is_empty() {
+        return None;
+    }
+    let mut m = JsonMap::new();
+    if !inputs.is_empty() {
+        m.insert("inputs".into(), JsonValue::Array(inputs));
+    }
+    if !outputs.is_empty() {
+        m.insert("outputs".into(), JsonValue::Array(outputs));
+    }
+    serde_json::to_string(&JsonValue::Object(m)).ok()
+}
+
+fn dataset_column_lineage_to_json(de: &DatasetEventView<'_>) -> Option<String> {
+    if !de.dataset.is_set() {
+        return None;
+    }
+    let cl = de.dataset.column_lineage.as_option().and_then(column_lineage_to_json)?;
+    let mut entry = JsonMap::new();
+    entry.insert(
+        "namespace".into(),
+        JsonValue::String(de.dataset.namespace.into()),
+    );
+    entry.insert("name".into(), JsonValue::String(de.dataset.name.into()));
+    entry.insert("columnLineage".into(), cl);
+    let mut m = JsonMap::new();
+    m.insert("dataset".into(), JsonValue::Object(entry));
+    serde_json::to_string(&JsonValue::Object(m)).ok()
+}
+
 #[allow(clippy::too_many_arguments)]
 fn append_run(
     re: &RunEventView<'_>,
@@ -199,6 +383,7 @@ fn append_run(
     facets: &mut StringBuilder,
     inputs: &mut StringBuilder,
     outputs: &mut StringBuilder,
+    column_lineage: &mut StringBuilder,
     raw: &mut StringBuilder,
 ) {
     kind.append_value("run");
@@ -232,6 +417,7 @@ fn append_run(
     facets.append_null();
     inputs.append_option(input_datasets_to_json(&re.inputs));
     outputs.append_option(output_datasets_to_json(&re.outputs));
+    column_lineage.append_option(run_column_lineage_to_json(re));
     raw.append_option(non_empty(re.raw_json));
 }
 
@@ -251,6 +437,7 @@ fn append_job(
     facets: &mut StringBuilder,
     inputs: &mut StringBuilder,
     outputs: &mut StringBuilder,
+    column_lineage: &mut StringBuilder,
     raw: &mut StringBuilder,
 ) {
     kind.append_value("job");
@@ -279,6 +466,7 @@ fn append_job(
     facets.append_null();
     inputs.append_option(input_datasets_to_json(&je.inputs));
     outputs.append_option(output_datasets_to_json(&je.outputs));
+    column_lineage.append_option(job_column_lineage_to_json(je));
     raw.append_option(non_empty(je.raw_json));
 }
 
@@ -298,6 +486,7 @@ fn append_dataset(
     facets: &mut StringBuilder,
     inputs: &mut StringBuilder,
     outputs: &mut StringBuilder,
+    column_lineage: &mut StringBuilder,
     raw: &mut StringBuilder,
 ) {
     kind.append_value("dataset");
@@ -326,5 +515,6 @@ fn append_dataset(
     facets.append_null();
     inputs.append_null();
     outputs.append_null();
+    column_lineage.append_option(dataset_column_lineage_to_json(de));
     raw.append_option(non_empty(de.raw_json));
 }
