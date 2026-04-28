@@ -94,7 +94,7 @@ Put the assembly jar on DBFS or UC Volumes and set on the cluster:
 | `spark.openlineage.namespace`                     | `default`   | Logical namespace for datasets and jobs.                    |
 | `spark.openlineage.jobName`                       | *(derived)* | Explicit override for the OpenLineage job name.             |
 | `spark.openlineage.emit.taskMetrics`              | `true`      | Ship per-task metrics from executors to driver and fold them into the `COMPLETE` event's facets. |
-| `spark.openlineage.emit.columnLineage`            | `false`     | Reserved for column-level lineage (v2, not yet wired).      |
+| `spark.openlineage.emit.columnLineage`            | `false`     | Walk the analyzed `LogicalPlan` to derive a typed `ColumnLineageDatasetFacet` per output dataset (DIRECT + INDIRECT transformations and dataset-level deps, mirroring OpenLineage 1-2-0). Off by default; flip to `true` to populate `OutputDataset.column_lineage` on every `RunEvent`. Extraction is wrapped in `try/catch NonFatal` and a failure leaves lineage attached without column lineage. |
 | `spark.openlineage.emit.streaming.progressEveryN` | `1`         | Throttle `onQueryProgress` to every Nth batch (1 = every batch). |
 | `spark.openlineage.queueSize`                     | `1024`      | Bounded queue in front of the transport worker; overflow is dropped with a log line. |
 | `spark.openlineage.batchFlushMs`                  | `250`       | Max time an event waits in the queue before being flushed.  |
@@ -139,6 +139,28 @@ For every `QueryExecution` that reaches `QueryExecutionListener.onSuccess` or
                           `SinkProgress` descriptions)
 - `onQueryTerminated`  → `COMPLETE` on clean shutdown, `FAIL` if the
                           termination carried an exception
+
+### Column lineage
+
+When `spark.openlineage.emit.columnLineage=true`, `ColumnLineageExtractor`
+walks the analyzed `LogicalPlan` once per query and produces a typed
+`ColumnLineageDatasetFacet` for each output dataset. The facet follows the
+OpenLineage 1-2-0 schema and rides on the `OutputDataset.column_lineage`
+proto field (sibling of the existing generic `facets` struct). Coverage:
+
+- **DIRECT / IDENTITY / TRANSFORMATION / AGGREGATION** classified per
+  output column from `Project`, `Aggregate`, `Window`, `Generate`, and
+  `SubqueryAlias` nodes.
+- **INDIRECT / FILTER / SORT / JOIN / GROUP_BY / WINDOW** dependencies
+  collected from `Filter.condition`, `Sort.order`, `Join.condition`,
+  `Aggregate.groupingExpressions`, and window partition / order specs;
+  also surfaced on the top-level `dataset` deps array.
+- **`masking=true`** flagged when the projection routes through `md5`,
+  `sha1`, `sha2`, `mask`, or `regexp_replace`.
+
+Extraction is best-effort: any `NonFatal` failure inside the extractor is
+logged and the run event still ships, just without the typed facet
+attached.
 
 ### Dataset identity
 
@@ -213,7 +235,7 @@ spark-openlineage-plugin/
 |-------------------------------------------|----------------------------------------------------|------------------------------------|
 | Wire format                               | `lineage.v1.*` protobuf over ConnectRPC            | OpenLineage JSON spec over HTTP    |
 | Spark version                             | 4.x only (2.13)                                    | 2.4 / 3.x / 4.x                    |
-| Column-level lineage                      | v2 (not yet)                                       | Yes                                |
+| Column-level lineage                      | Yes — typed `ColumnLineageDatasetFacet` (1-2-0 spec) | Yes                                |
 | Custom facets                             | v2 (not yet)                                       | Yes, extensible API                |
 | Integrates with this repo's storage       | Yes — `open-lineage-service` → Rust → Delta        | No                                 |
 

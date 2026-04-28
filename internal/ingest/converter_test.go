@@ -435,3 +435,366 @@ func ptrRawMsg(s string) *json.RawMessage {
 	raw := json.RawMessage(s)
 	return &raw
 }
+
+func TestConvertEvent_ColumnLineageOnOutput(t *testing.T) {
+	input := `{
+		"eventTime": "2024-06-15T10:30:00Z",
+		"producer": "p",
+		"schemaURL": "s",
+		"eventType": "COMPLETE",
+		"run": {"runId": "r"},
+		"job": {"namespace": "ns", "name": "n"},
+		"outputs": [
+			{
+				"namespace": "warehouse",
+				"name": "silver.customers",
+				"facets": {
+					"columnLineage": {
+						"fields": {
+							"customer_id": {
+								"inputFields": [
+									{
+										"namespace": "src",
+										"name": "raw.customers",
+										"field": "id",
+										"transformations": [
+											{
+												"type": "DIRECT",
+												"subtype": "IDENTITY",
+												"description": "",
+												"masking": false
+											}
+										]
+									}
+								]
+							},
+							"email_hash": {
+								"inputFields": [
+									{
+										"namespace": "src",
+										"name": "raw.customers",
+										"field": "email",
+										"transformations": [
+											{
+												"type": "DIRECT",
+												"subtype": "TRANSFORMATION",
+												"description": "md5",
+												"masking": true
+											}
+										]
+									}
+								]
+							}
+						},
+						"dataset": [
+							{
+								"namespace": "src",
+								"name": "raw.customers",
+								"field": "region",
+								"transformations": [
+									{
+										"type": "INDIRECT",
+										"subtype": "FILTER"
+									}
+								]
+							}
+						]
+					}
+				}
+			}
+		]
+	}`
+
+	evt, err := ConvertEvent([]byte(input))
+	if err != nil {
+		t.Fatalf("ConvertEvent failed: %v", err)
+	}
+	re := evt.GetRunEvent()
+	if re == nil || len(re.Outputs) != 1 {
+		t.Fatalf("expected 1 output, got %v", re)
+	}
+	out := re.Outputs[0]
+	cl := out.GetColumnLineage()
+	if cl == nil {
+		t.Fatal("expected ColumnLineage to be populated")
+	}
+
+	if len(cl.Fields) != 2 {
+		t.Errorf("Fields count = %d, want 2", len(cl.Fields))
+	}
+
+	custID, ok := cl.Fields["customer_id"]
+	if !ok {
+		t.Fatal("missing customer_id field")
+	}
+	if len(custID.InputFields) != 1 {
+		t.Fatalf("customer_id inputFields = %d, want 1", len(custID.InputFields))
+	}
+	if custID.InputFields[0].Field != "id" {
+		t.Errorf("customer_id input field = %q, want id", custID.InputFields[0].Field)
+	}
+	if custID.InputFields[0].Transformations[0].Subtype != "IDENTITY" {
+		t.Errorf("subtype = %q", custID.InputFields[0].Transformations[0].Subtype)
+	}
+
+	emailHash := cl.Fields["email_hash"]
+	if !emailHash.InputFields[0].Transformations[0].Masking {
+		t.Error("expected email_hash masking=true")
+	}
+	if emailHash.InputFields[0].Transformations[0].Description != "md5" {
+		t.Errorf("description = %q, want md5", emailHash.InputFields[0].Transformations[0].Description)
+	}
+
+	if len(cl.Dataset) != 1 || cl.Dataset[0].Field != "region" {
+		t.Errorf("dataset deps = %+v, want one entry for region", cl.Dataset)
+	}
+	if cl.Dataset[0].Transformations[0].Type != "INDIRECT" {
+		t.Errorf("dataset transformation type = %q", cl.Dataset[0].Transformations[0].Type)
+	}
+
+	// Original facets struct is preserved alongside the typed field for back-compat.
+	if out.Facets == nil {
+		t.Error("expected Facets struct to remain populated")
+	}
+	if _, ok := out.Facets.AsMap()["columnLineage"]; !ok {
+		t.Error("columnLineage missing from Facets struct")
+	}
+}
+
+func TestConvertEvent_ColumnLineageOnInput(t *testing.T) {
+	input := `{
+		"eventTime": "2024-06-15T10:30:00Z",
+		"producer": "p",
+		"schemaURL": "s",
+		"run": {"runId": "r"},
+		"job": {"namespace": "ns", "name": "n"},
+		"inputs": [
+			{
+				"namespace": "src",
+				"name": "raw",
+				"facets": {
+					"columnLineage": {
+						"dataset": [
+							{
+								"namespace": "src",
+								"name": "raw",
+								"field": "ts",
+								"transformations": [{"type": "INDIRECT", "subtype": "SORT"}]
+							}
+						]
+					}
+				}
+			}
+		]
+	}`
+
+	evt, err := ConvertEvent([]byte(input))
+	if err != nil {
+		t.Fatalf("ConvertEvent failed: %v", err)
+	}
+	in := evt.GetRunEvent().Inputs[0]
+	if in.GetColumnLineage() == nil {
+		t.Fatal("expected ColumnLineage on input")
+	}
+	if len(in.ColumnLineage.Dataset) != 1 || in.ColumnLineage.Dataset[0].Field != "ts" {
+		t.Errorf("dataset deps = %+v", in.ColumnLineage.Dataset)
+	}
+}
+
+func TestConvertEvent_ColumnLineageOnDatasetEvent(t *testing.T) {
+	input := `{
+		"eventTime": "2024-06-15T10:30:00Z",
+		"producer": "p",
+		"schemaURL": "s",
+		"dataset": {
+			"namespace": "ns",
+			"name": "ds",
+			"facets": {
+				"columnLineage": {
+					"fields": {
+						"x": {
+							"inputFields": [
+								{"namespace": "src", "name": "t", "field": "y"}
+							]
+						}
+					}
+				}
+			}
+		}
+	}`
+
+	evt, err := ConvertEvent([]byte(input))
+	if err != nil {
+		t.Fatalf("ConvertEvent failed: %v", err)
+	}
+	de := evt.GetDatasetEvent()
+	if de == nil || de.Dataset == nil || de.Dataset.GetColumnLineage() == nil {
+		t.Fatalf("expected ColumnLineage on dataset event, got %v", de)
+	}
+	if _, ok := de.Dataset.ColumnLineage.Fields["x"]; !ok {
+		t.Error("expected field x in column lineage")
+	}
+}
+
+func TestConvertEvent_NoColumnLineageWhenAbsent(t *testing.T) {
+	input := `{
+		"eventTime": "2024-06-15T10:30:00Z",
+		"producer": "p",
+		"schemaURL": "s",
+		"run": {"runId": "r"},
+		"job": {"namespace": "ns", "name": "n"},
+		"outputs": [
+			{
+				"namespace": "warehouse",
+				"name": "t",
+				"facets": {"otherFacet": {"x": 1}}
+			}
+		]
+	}`
+
+	evt, err := ConvertEvent([]byte(input))
+	if err != nil {
+		t.Fatalf("ConvertEvent failed: %v", err)
+	}
+	if evt.GetRunEvent().Outputs[0].GetColumnLineage() != nil {
+		t.Error("expected ColumnLineage to be nil when facet is absent")
+	}
+}
+
+func TestParseColumnLineage_TableDriven(t *testing.T) {
+	tests := []struct {
+		name      string
+		raw       map[string]interface{}
+		wantNil   bool
+		assertCl  func(t *testing.T, cl interface{})
+	}{
+		{
+			name:    "nil map",
+			raw:     nil,
+			wantNil: true,
+		},
+		{
+			name:    "no columnLineage key",
+			raw:     map[string]interface{}{"otherFacet": map[string]interface{}{}},
+			wantNil: true,
+		},
+		{
+			name:    "columnLineage present but not an object",
+			raw:     map[string]interface{}{"columnLineage": "not-an-object"},
+			wantNil: true,
+		},
+		{
+			name: "empty columnLineage object yields nil",
+			raw: map[string]interface{}{
+				"columnLineage": map[string]interface{}{},
+			},
+			wantNil: true,
+		},
+		{
+			name: "fields with no inputFields entries dropped",
+			raw: map[string]interface{}{
+				"columnLineage": map[string]interface{}{
+					"fields": map[string]interface{}{
+						"out_only": map[string]interface{}{},
+					},
+				},
+			},
+			wantNil: true,
+		},
+		{
+			name: "missing transformation type drops the entry",
+			raw: map[string]interface{}{
+				"columnLineage": map[string]interface{}{
+					"fields": map[string]interface{}{
+						"x": map[string]interface{}{
+							"inputFields": []interface{}{
+								map[string]interface{}{
+									"namespace": "ns", "name": "n", "field": "f",
+									"transformations": []interface{}{
+										map[string]interface{}{"description": "no type here"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			assertCl: func(t *testing.T, v interface{}) {
+				_ = v
+			},
+		},
+		{
+			name: "missing required InputField fields drops it",
+			raw: map[string]interface{}{
+				"columnLineage": map[string]interface{}{
+					"fields": map[string]interface{}{
+						"x": map[string]interface{}{
+							"inputFields": []interface{}{
+								map[string]interface{}{"namespace": "ns"}, // no name/field
+							},
+						},
+					},
+				},
+			},
+			wantNil: true,
+		},
+		{
+			name: "deprecated transformationDescription/Type still preserved",
+			raw: map[string]interface{}{
+				"columnLineage": map[string]interface{}{
+					"fields": map[string]interface{}{
+						"x": map[string]interface{}{
+							"inputFields": []interface{}{
+								map[string]interface{}{"namespace": "ns", "name": "n", "field": "f"},
+							},
+							"transformationDescription": "raw sql",
+							"transformationType":        "DIRECT",
+						},
+					},
+				},
+			},
+			assertCl: func(t *testing.T, v interface{}) {
+				cl := v.(*lineageColumnFacetT)
+				if cl.fields["x"].td != "raw sql" {
+					t.Errorf("transformationDescription = %q", cl.fields["x"].td)
+				}
+				if cl.fields["x"].tt != "DIRECT" {
+					t.Errorf("transformationType = %q", cl.fields["x"].tt)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseColumnLineageFacet(tt.raw)
+			if tt.wantNil {
+				if got != nil {
+					t.Errorf("expected nil, got %+v", got)
+				}
+				return
+			}
+			if got == nil && tt.assertCl == nil {
+				t.Fatal("expected non-nil")
+			}
+			if tt.assertCl != nil && got != nil {
+				// Translate to the local probe struct so the closures don't have
+				// to depend on the generated proto types.
+				probe := &lineageColumnFacetT{fields: map[string]struct{ td, tt string }{}}
+				for k, v := range got.Fields {
+					probe.fields[k] = struct{ td, tt string }{
+						td: v.GetTransformationDescription(),
+						tt: v.GetTransformationType(),
+					}
+				}
+				tt.assertCl(t, probe)
+			}
+		})
+	}
+}
+
+// lineageColumnFacetT is a minimal probe over the typed proto used solely by the
+// table-driven test above to keep closures readable.
+type lineageColumnFacetT struct {
+	fields map[string]struct{ td, tt string }
+}

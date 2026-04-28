@@ -5601,6 +5601,21 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
      * <code>.google.protobuf.Struct facets = 3 [json_name = "facets"];</code>
      */
     com.google.protobuf.StructOrBuilder getFacetsOrBuilder();
+
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+     * @return Whether the columnLineage field is set.
+     */
+    boolean hasColumnLineage();
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+     * @return The columnLineage.
+     */
+    lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage();
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+     */
+    lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder();
   }
   /**
    * Protobuf type {@code lineage.v1.StaticDataset}
@@ -5751,6 +5766,32 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       return facets_ == null ? com.google.protobuf.Struct.getDefaultInstance() : facets_;
     }
 
+    public static final int COLUMN_LINEAGE_FIELD_NUMBER = 4;
+    private lineage.v1.Lineage.ColumnLineageDatasetFacet columnLineage_;
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+     * @return Whether the columnLineage field is set.
+     */
+    @java.lang.Override
+    public boolean hasColumnLineage() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+     * @return The columnLineage.
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage() {
+      return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+    }
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder() {
+      return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -5774,6 +5815,9 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(3, getFacets());
       }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(4, getColumnLineage());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -5792,6 +5836,10 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getFacets());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, getColumnLineage());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -5817,6 +5865,11 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (!getFacets()
             .equals(other.getFacets())) return false;
       }
+      if (hasColumnLineage() != other.hasColumnLineage()) return false;
+      if (hasColumnLineage()) {
+        if (!getColumnLineage()
+            .equals(other.getColumnLineage())) return false;
+      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -5835,6 +5888,10 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (hasFacets()) {
         hash = (37 * hash) + FACETS_FIELD_NUMBER;
         hash = (53 * hash) + getFacets().hashCode();
+      }
+      if (hasColumnLineage()) {
+        hash = (37 * hash) + COLUMN_LINEAGE_FIELD_NUMBER;
+        hash = (53 * hash) + getColumnLineage().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -5967,6 +6024,7 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (com.google.protobuf.GeneratedMessage
                 .alwaysUseFieldBuilders) {
           internalGetFacetsFieldBuilder();
+          internalGetColumnLineageFieldBuilder();
         }
       }
       @java.lang.Override
@@ -5979,6 +6037,11 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (facetsBuilder_ != null) {
           facetsBuilder_.dispose();
           facetsBuilder_ = null;
+        }
+        columnLineage_ = null;
+        if (columnLineageBuilder_ != null) {
+          columnLineageBuilder_.dispose();
+          columnLineageBuilder_ = null;
         }
         return this;
       }
@@ -6026,6 +6089,12 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
               : facetsBuilder_.build();
           to_bitField0_ |= 0x00000001;
         }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.columnLineage_ = columnLineageBuilder_ == null
+              ? columnLineage_
+              : columnLineageBuilder_.build();
+          to_bitField0_ |= 0x00000002;
+        }
         result.bitField0_ |= to_bitField0_;
       }
 
@@ -6053,6 +6122,9 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         }
         if (other.hasFacets()) {
           mergeFacets(other.getFacets());
+        }
+        if (other.hasColumnLineage()) {
+          mergeColumnLineage(other.getColumnLineage());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -6097,6 +6169,13 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
                 bitField0_ |= 0x00000004;
                 break;
               } // case 26
+              case 34: {
+                input.readMessage(
+                    internalGetColumnLineageFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00000008;
+                break;
+              } // case 34
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -6377,6 +6456,127 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
           facets_ = null;
         }
         return facetsBuilder_;
+      }
+
+      private lineage.v1.Lineage.ColumnLineageDatasetFacet columnLineage_;
+      private com.google.protobuf.SingleFieldBuilder<
+          lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder> columnLineageBuilder_;
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       * @return Whether the columnLineage field is set.
+       */
+      public boolean hasColumnLineage() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       * @return The columnLineage.
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage() {
+        if (columnLineageBuilder_ == null) {
+          return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+        } else {
+          return columnLineageBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      public Builder setColumnLineage(lineage.v1.Lineage.ColumnLineageDatasetFacet value) {
+        if (columnLineageBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          columnLineage_ = value;
+        } else {
+          columnLineageBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      public Builder setColumnLineage(
+          lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder builderForValue) {
+        if (columnLineageBuilder_ == null) {
+          columnLineage_ = builderForValue.build();
+        } else {
+          columnLineageBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      public Builder mergeColumnLineage(lineage.v1.Lineage.ColumnLineageDatasetFacet value) {
+        if (columnLineageBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0) &&
+            columnLineage_ != null &&
+            columnLineage_ != lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance()) {
+            getColumnLineageBuilder().mergeFrom(value);
+          } else {
+            columnLineage_ = value;
+          }
+        } else {
+          columnLineageBuilder_.mergeFrom(value);
+        }
+        if (columnLineage_ != null) {
+          bitField0_ |= 0x00000008;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      public Builder clearColumnLineage() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        columnLineage_ = null;
+        if (columnLineageBuilder_ != null) {
+          columnLineageBuilder_.dispose();
+          columnLineageBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder getColumnLineageBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return internalGetColumnLineageFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder() {
+        if (columnLineageBuilder_ != null) {
+          return columnLineageBuilder_.getMessageOrBuilder();
+        } else {
+          return columnLineage_ == null ?
+              lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+        }
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 4 [json_name = "columnLineage"];</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder> 
+          internalGetColumnLineageFieldBuilder() {
+        if (columnLineageBuilder_ == null) {
+          columnLineageBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder>(
+                  getColumnLineage(),
+                  getParentForChildren(),
+                  isClean());
+          columnLineage_ = null;
+        }
+        return columnLineageBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:lineage.v1.StaticDataset)
@@ -9194,6 +9394,21 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
      * <code>.google.protobuf.Struct input_facets = 4 [json_name = "inputFacets"];</code>
      */
     com.google.protobuf.StructOrBuilder getInputFacetsOrBuilder();
+
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return Whether the columnLineage field is set.
+     */
+    boolean hasColumnLineage();
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return The columnLineage.
+     */
+    lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage();
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     */
+    lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder();
   }
   /**
    * Protobuf type {@code lineage.v1.InputDataset}
@@ -9370,6 +9585,32 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       return inputFacets_ == null ? com.google.protobuf.Struct.getDefaultInstance() : inputFacets_;
     }
 
+    public static final int COLUMN_LINEAGE_FIELD_NUMBER = 5;
+    private lineage.v1.Lineage.ColumnLineageDatasetFacet columnLineage_;
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return Whether the columnLineage field is set.
+     */
+    @java.lang.Override
+    public boolean hasColumnLineage() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return The columnLineage.
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage() {
+      return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+    }
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder() {
+      return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -9396,6 +9637,9 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(4, getInputFacets());
       }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeMessage(5, getColumnLineage());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -9418,6 +9662,10 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getInputFacets());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getColumnLineage());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -9448,6 +9696,11 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (!getInputFacets()
             .equals(other.getInputFacets())) return false;
       }
+      if (hasColumnLineage() != other.hasColumnLineage()) return false;
+      if (hasColumnLineage()) {
+        if (!getColumnLineage()
+            .equals(other.getColumnLineage())) return false;
+      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -9470,6 +9723,10 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (hasInputFacets()) {
         hash = (37 * hash) + INPUT_FACETS_FIELD_NUMBER;
         hash = (53 * hash) + getInputFacets().hashCode();
+      }
+      if (hasColumnLineage()) {
+        hash = (37 * hash) + COLUMN_LINEAGE_FIELD_NUMBER;
+        hash = (53 * hash) + getColumnLineage().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -9603,6 +9860,7 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
                 .alwaysUseFieldBuilders) {
           internalGetFacetsFieldBuilder();
           internalGetInputFacetsFieldBuilder();
+          internalGetColumnLineageFieldBuilder();
         }
       }
       @java.lang.Override
@@ -9620,6 +9878,11 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (inputFacetsBuilder_ != null) {
           inputFacetsBuilder_.dispose();
           inputFacetsBuilder_ = null;
+        }
+        columnLineage_ = null;
+        if (columnLineageBuilder_ != null) {
+          columnLineageBuilder_.dispose();
+          columnLineageBuilder_ = null;
         }
         return this;
       }
@@ -9673,6 +9936,12 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
               : inputFacetsBuilder_.build();
           to_bitField0_ |= 0x00000002;
         }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.columnLineage_ = columnLineageBuilder_ == null
+              ? columnLineage_
+              : columnLineageBuilder_.build();
+          to_bitField0_ |= 0x00000004;
+        }
         result.bitField0_ |= to_bitField0_;
       }
 
@@ -9703,6 +9972,9 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         }
         if (other.hasInputFacets()) {
           mergeInputFacets(other.getInputFacets());
+        }
+        if (other.hasColumnLineage()) {
+          mergeColumnLineage(other.getColumnLineage());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -9754,6 +10026,13 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
                 bitField0_ |= 0x00000008;
                 break;
               } // case 34
+              case 42: {
+                input.readMessage(
+                    internalGetColumnLineageFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -10157,6 +10436,127 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         return inputFacetsBuilder_;
       }
 
+      private lineage.v1.Lineage.ColumnLineageDatasetFacet columnLineage_;
+      private com.google.protobuf.SingleFieldBuilder<
+          lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder> columnLineageBuilder_;
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       * @return Whether the columnLineage field is set.
+       */
+      public boolean hasColumnLineage() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       * @return The columnLineage.
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage() {
+        if (columnLineageBuilder_ == null) {
+          return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+        } else {
+          return columnLineageBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder setColumnLineage(lineage.v1.Lineage.ColumnLineageDatasetFacet value) {
+        if (columnLineageBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          columnLineage_ = value;
+        } else {
+          columnLineageBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder setColumnLineage(
+          lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder builderForValue) {
+        if (columnLineageBuilder_ == null) {
+          columnLineage_ = builderForValue.build();
+        } else {
+          columnLineageBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder mergeColumnLineage(lineage.v1.Lineage.ColumnLineageDatasetFacet value) {
+        if (columnLineageBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) != 0) &&
+            columnLineage_ != null &&
+            columnLineage_ != lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance()) {
+            getColumnLineageBuilder().mergeFrom(value);
+          } else {
+            columnLineage_ = value;
+          }
+        } else {
+          columnLineageBuilder_.mergeFrom(value);
+        }
+        if (columnLineage_ != null) {
+          bitField0_ |= 0x00000010;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder clearColumnLineage() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        columnLineage_ = null;
+        if (columnLineageBuilder_ != null) {
+          columnLineageBuilder_.dispose();
+          columnLineageBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder getColumnLineageBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return internalGetColumnLineageFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder() {
+        if (columnLineageBuilder_ != null) {
+          return columnLineageBuilder_.getMessageOrBuilder();
+        } else {
+          return columnLineage_ == null ?
+              lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+        }
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder> 
+          internalGetColumnLineageFieldBuilder() {
+        if (columnLineageBuilder_ == null) {
+          columnLineageBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder>(
+                  getColumnLineage(),
+                  getParentForChildren(),
+                  isClean());
+          columnLineage_ = null;
+        }
+        return columnLineageBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:lineage.v1.InputDataset)
     }
 
@@ -10265,6 +10665,21 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
      * <code>.google.protobuf.Struct output_facets = 4 [json_name = "outputFacets"];</code>
      */
     com.google.protobuf.StructOrBuilder getOutputFacetsOrBuilder();
+
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return Whether the columnLineage field is set.
+     */
+    boolean hasColumnLineage();
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return The columnLineage.
+     */
+    lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage();
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     */
+    lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder();
   }
   /**
    * Protobuf type {@code lineage.v1.OutputDataset}
@@ -10441,6 +10856,32 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       return outputFacets_ == null ? com.google.protobuf.Struct.getDefaultInstance() : outputFacets_;
     }
 
+    public static final int COLUMN_LINEAGE_FIELD_NUMBER = 5;
+    private lineage.v1.Lineage.ColumnLineageDatasetFacet columnLineage_;
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return Whether the columnLineage field is set.
+     */
+    @java.lang.Override
+    public boolean hasColumnLineage() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     * @return The columnLineage.
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage() {
+      return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+    }
+    /**
+     * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder() {
+      return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -10467,6 +10908,9 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (((bitField0_ & 0x00000002) != 0)) {
         output.writeMessage(4, getOutputFacets());
       }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeMessage(5, getColumnLineage());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -10489,6 +10933,10 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, getOutputFacets());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getColumnLineage());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -10519,6 +10967,11 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (!getOutputFacets()
             .equals(other.getOutputFacets())) return false;
       }
+      if (hasColumnLineage() != other.hasColumnLineage()) return false;
+      if (hasColumnLineage()) {
+        if (!getColumnLineage()
+            .equals(other.getColumnLineage())) return false;
+      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -10541,6 +10994,10 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       if (hasOutputFacets()) {
         hash = (37 * hash) + OUTPUT_FACETS_FIELD_NUMBER;
         hash = (53 * hash) + getOutputFacets().hashCode();
+      }
+      if (hasColumnLineage()) {
+        hash = (37 * hash) + COLUMN_LINEAGE_FIELD_NUMBER;
+        hash = (53 * hash) + getColumnLineage().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -10674,6 +11131,7 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
                 .alwaysUseFieldBuilders) {
           internalGetFacetsFieldBuilder();
           internalGetOutputFacetsFieldBuilder();
+          internalGetColumnLineageFieldBuilder();
         }
       }
       @java.lang.Override
@@ -10691,6 +11149,11 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         if (outputFacetsBuilder_ != null) {
           outputFacetsBuilder_.dispose();
           outputFacetsBuilder_ = null;
+        }
+        columnLineage_ = null;
+        if (columnLineageBuilder_ != null) {
+          columnLineageBuilder_.dispose();
+          columnLineageBuilder_ = null;
         }
         return this;
       }
@@ -10744,6 +11207,12 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
               : outputFacetsBuilder_.build();
           to_bitField0_ |= 0x00000002;
         }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.columnLineage_ = columnLineageBuilder_ == null
+              ? columnLineage_
+              : columnLineageBuilder_.build();
+          to_bitField0_ |= 0x00000004;
+        }
         result.bitField0_ |= to_bitField0_;
       }
 
@@ -10774,6 +11243,9 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         }
         if (other.hasOutputFacets()) {
           mergeOutputFacets(other.getOutputFacets());
+        }
+        if (other.hasColumnLineage()) {
+          mergeColumnLineage(other.getColumnLineage());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -10825,6 +11297,13 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
                 bitField0_ |= 0x00000008;
                 break;
               } // case 34
+              case 42: {
+                input.readMessage(
+                    internalGetColumnLineageFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -11228,6 +11707,127 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
         return outputFacetsBuilder_;
       }
 
+      private lineage.v1.Lineage.ColumnLineageDatasetFacet columnLineage_;
+      private com.google.protobuf.SingleFieldBuilder<
+          lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder> columnLineageBuilder_;
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       * @return Whether the columnLineage field is set.
+       */
+      public boolean hasColumnLineage() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       * @return The columnLineage.
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet getColumnLineage() {
+        if (columnLineageBuilder_ == null) {
+          return columnLineage_ == null ? lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+        } else {
+          return columnLineageBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder setColumnLineage(lineage.v1.Lineage.ColumnLineageDatasetFacet value) {
+        if (columnLineageBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          columnLineage_ = value;
+        } else {
+          columnLineageBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder setColumnLineage(
+          lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder builderForValue) {
+        if (columnLineageBuilder_ == null) {
+          columnLineage_ = builderForValue.build();
+        } else {
+          columnLineageBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder mergeColumnLineage(lineage.v1.Lineage.ColumnLineageDatasetFacet value) {
+        if (columnLineageBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) != 0) &&
+            columnLineage_ != null &&
+            columnLineage_ != lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance()) {
+            getColumnLineageBuilder().mergeFrom(value);
+          } else {
+            columnLineage_ = value;
+          }
+        } else {
+          columnLineageBuilder_.mergeFrom(value);
+        }
+        if (columnLineage_ != null) {
+          bitField0_ |= 0x00000010;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public Builder clearColumnLineage() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        columnLineage_ = null;
+        if (columnLineageBuilder_ != null) {
+          columnLineageBuilder_.dispose();
+          columnLineageBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder getColumnLineageBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return internalGetColumnLineageFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      public lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder getColumnLineageOrBuilder() {
+        if (columnLineageBuilder_ != null) {
+          return columnLineageBuilder_.getMessageOrBuilder();
+        } else {
+          return columnLineage_ == null ?
+              lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance() : columnLineage_;
+        }
+      }
+      /**
+       * <code>.lineage.v1.ColumnLineageDatasetFacet column_lineage = 5 [json_name = "columnLineage"];</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder> 
+          internalGetColumnLineageFieldBuilder() {
+        if (columnLineageBuilder_ == null) {
+          columnLineageBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              lineage.v1.Lineage.ColumnLineageDatasetFacet, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder, lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder>(
+                  getColumnLineage(),
+                  getParentForChildren(),
+                  isClean());
+          columnLineage_ = null;
+        }
+        return columnLineageBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:lineage.v1.OutputDataset)
     }
 
@@ -11274,6 +11874,4562 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
 
     @java.lang.Override
     public lineage.v1.Lineage.OutputDataset getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ColumnLineageDatasetFacetOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:lineage.v1.ColumnLineageDatasetFacet)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    int getFieldsCount();
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    boolean containsFields(
+        java.lang.String key);
+    /**
+     * Use {@link #getFieldsMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>
+    getFields();
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>
+    getFieldsMap();
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    /* nullable */
+lineage.v1.Lineage.OutputFieldLineage getFieldsOrDefault(
+        java.lang.String key,
+        /* nullable */
+lineage.v1.Lineage.OutputFieldLineage defaultValue);
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    lineage.v1.Lineage.OutputFieldLineage getFieldsOrThrow(
+        java.lang.String key);
+
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    java.util.List<lineage.v1.Lineage.InputField> 
+        getDatasetList();
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    lineage.v1.Lineage.InputField getDataset(int index);
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    int getDatasetCount();
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    java.util.List<? extends lineage.v1.Lineage.InputFieldOrBuilder> 
+        getDatasetOrBuilderList();
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    lineage.v1.Lineage.InputFieldOrBuilder getDatasetOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * ColumnLineageDatasetFacet is a typed model of the OpenLineage 1-2-0
+   * `ColumnLineageDatasetFacet` (https://openlineage.io/spec/facets/1-2-0/ColumnLineageDatasetFacet.json).
+   *
+   * Carrying it as a strong proto type — rather than burying it inside
+   * `google.protobuf.Struct facets` — lets downstream Go/Rust readers consume
+   * column lineage without re-parsing arbitrary JSON shapes, which is important
+   * because nested struct/array columns can blow past `Struct`'s practical
+   * nesting depth (~100 levels) on real-world plans.
+   * </pre>
+   *
+   * Protobuf type {@code lineage.v1.ColumnLineageDatasetFacet}
+   */
+  public static final class ColumnLineageDatasetFacet extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:lineage.v1.ColumnLineageDatasetFacet)
+      ColumnLineageDatasetFacetOrBuilder {
+  private static final long serialVersionUID = 0L;
+    static {
+      com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 34,
+        /* patch= */ 1,
+        /* suffix= */ "",
+        "ColumnLineageDatasetFacet");
+    }
+    // Use ColumnLineageDatasetFacet.newBuilder() to construct.
+    private ColumnLineageDatasetFacet(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+    }
+    private ColumnLineageDatasetFacet() {
+      dataset_ = java.util.Collections.emptyList();
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor;
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapFieldReflectionAccessor internalGetMapFieldReflection(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetFields();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              lineage.v1.Lineage.ColumnLineageDatasetFacet.class, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder.class);
+    }
+
+    public static final int FIELDS_FIELD_NUMBER = 1;
+    private static final class FieldsDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, lineage.v1.Lineage.OutputFieldLineage> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>newDefaultInstance(
+                  lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_FieldsEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                  lineage.v1.Lineage.OutputFieldLineage.getDefaultInstance());
+    }
+    @SuppressWarnings("serial")
+    private com.google.protobuf.MapField<
+        java.lang.String, lineage.v1.Lineage.OutputFieldLineage> fields_;
+    private com.google.protobuf.MapField<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>
+    internalGetFields() {
+      if (fields_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            FieldsDefaultEntryHolder.defaultEntry);
+      }
+      return fields_;
+    }
+    public int getFieldsCount() {
+      return internalGetFields().getMap().size();
+    }
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    @java.lang.Override
+    public boolean containsFields(
+        java.lang.String key) {
+      if (key == null) { throw new NullPointerException("map key"); }
+      return internalGetFields().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getFieldsMap()} instead.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> getFields() {
+      return getFieldsMap();
+    }
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    @java.lang.Override
+    public java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> getFieldsMap() {
+      return internalGetFields().getMap();
+    }
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    @java.lang.Override
+    public /* nullable */
+lineage.v1.Lineage.OutputFieldLineage getFieldsOrDefault(
+        java.lang.String key,
+        /* nullable */
+lineage.v1.Lineage.OutputFieldLineage defaultValue) {
+      if (key == null) { throw new NullPointerException("map key"); }
+      java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> map =
+          internalGetFields().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <pre>
+     * Per-output-field lineage, keyed by output field name.
+     * </pre>
+     *
+     * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.OutputFieldLineage getFieldsOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new NullPointerException("map key"); }
+      java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> map =
+          internalGetFields().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    public static final int DATASET_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private java.util.List<lineage.v1.Lineage.InputField> dataset_;
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    @java.lang.Override
+    public java.util.List<lineage.v1.Lineage.InputField> getDatasetList() {
+      return dataset_;
+    }
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends lineage.v1.Lineage.InputFieldOrBuilder> 
+        getDatasetOrBuilderList() {
+      return dataset_;
+    }
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    @java.lang.Override
+    public int getDatasetCount() {
+      return dataset_.size();
+    }
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.InputField getDataset(int index) {
+      return dataset_.get(index);
+    }
+    /**
+     * <pre>
+     * Dataset-level dependencies that affect the whole output (filters, joins,
+     * group-by columns, sort keys, window partitioning, etc.). These do not
+     * map to a single output column.
+     * </pre>
+     *
+     * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.InputFieldOrBuilder getDatasetOrBuilder(
+        int index) {
+      return dataset_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      com.google.protobuf.GeneratedMessage
+        .serializeStringMapTo(
+          output,
+          internalGetFields(),
+          FieldsDefaultEntryHolder.defaultEntry,
+          1);
+      for (int i = 0; i < dataset_.size(); i++) {
+        output.writeMessage(2, dataset_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (java.util.Map.Entry<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> entry
+           : internalGetFields().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>
+        fields__ = FieldsDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .buildPartial();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, fields__);
+      }
+
+          {
+            final int count = dataset_.size();
+            for (int i = 0; i < count; i++) {
+              size += com.google.protobuf.CodedOutputStream
+                .computeMessageSizeNoTag(dataset_.get(i));
+            }
+            size += 1 * count;
+          }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof lineage.v1.Lineage.ColumnLineageDatasetFacet)) {
+        return super.equals(obj);
+      }
+      lineage.v1.Lineage.ColumnLineageDatasetFacet other = (lineage.v1.Lineage.ColumnLineageDatasetFacet) obj;
+
+      if (!internalGetFields().equals(
+          other.internalGetFields())) return false;
+      if (!getDatasetList()
+          .equals(other.getDatasetList())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (!internalGetFields().getMap().isEmpty()) {
+        hash = (37 * hash) + FIELDS_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetFields().hashCode();
+      }
+      if (getDatasetCount() > 0) {
+        hash = (37 * hash) + DATASET_FIELD_NUMBER;
+        hash = (53 * hash) + getDatasetList().hashCode();
+      }
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(lineage.v1.Lineage.ColumnLineageDatasetFacet prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * ColumnLineageDatasetFacet is a typed model of the OpenLineage 1-2-0
+     * `ColumnLineageDatasetFacet` (https://openlineage.io/spec/facets/1-2-0/ColumnLineageDatasetFacet.json).
+     *
+     * Carrying it as a strong proto type — rather than burying it inside
+     * `google.protobuf.Struct facets` — lets downstream Go/Rust readers consume
+     * column lineage without re-parsing arbitrary JSON shapes, which is important
+     * because nested struct/array columns can blow past `Struct`'s practical
+     * nesting depth (~100 levels) on real-world plans.
+     * </pre>
+     *
+     * Protobuf type {@code lineage.v1.ColumnLineageDatasetFacet}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:lineage.v1.ColumnLineageDatasetFacet)
+        lineage.v1.Lineage.ColumnLineageDatasetFacetOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor;
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapFieldReflectionAccessor internalGetMapFieldReflection(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetFields();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapFieldReflectionAccessor internalGetMutableMapFieldReflection(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableFields();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                lineage.v1.Lineage.ColumnLineageDatasetFacet.class, lineage.v1.Lineage.ColumnLineageDatasetFacet.Builder.class);
+      }
+
+      // Construct using lineage.v1.Lineage.ColumnLineageDatasetFacet.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        internalGetMutableFields().clear();
+        if (datasetBuilder_ == null) {
+          dataset_ = java.util.Collections.emptyList();
+        } else {
+          dataset_ = null;
+          datasetBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet getDefaultInstanceForType() {
+        return lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet build() {
+        lineage.v1.Lineage.ColumnLineageDatasetFacet result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.ColumnLineageDatasetFacet buildPartial() {
+        lineage.v1.Lineage.ColumnLineageDatasetFacet result = new lineage.v1.Lineage.ColumnLineageDatasetFacet(this);
+        buildPartialRepeatedFields(result);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartialRepeatedFields(lineage.v1.Lineage.ColumnLineageDatasetFacet result) {
+        if (datasetBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0)) {
+            dataset_ = java.util.Collections.unmodifiableList(dataset_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.dataset_ = dataset_;
+        } else {
+          result.dataset_ = datasetBuilder_.build();
+        }
+      }
+
+      private void buildPartial0(lineage.v1.Lineage.ColumnLineageDatasetFacet result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.fields_ = internalGetFields().build(FieldsDefaultEntryHolder.defaultEntry);
+        }
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof lineage.v1.Lineage.ColumnLineageDatasetFacet) {
+          return mergeFrom((lineage.v1.Lineage.ColumnLineageDatasetFacet)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(lineage.v1.Lineage.ColumnLineageDatasetFacet other) {
+        if (other == lineage.v1.Lineage.ColumnLineageDatasetFacet.getDefaultInstance()) return this;
+        internalGetMutableFields().mergeFrom(
+            other.internalGetFields());
+        bitField0_ |= 0x00000001;
+        if (datasetBuilder_ == null) {
+          if (!other.dataset_.isEmpty()) {
+            if (dataset_.isEmpty()) {
+              dataset_ = other.dataset_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureDatasetIsMutable();
+              dataset_.addAll(other.dataset_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.dataset_.isEmpty()) {
+            if (datasetBuilder_.isEmpty()) {
+              datasetBuilder_.dispose();
+              datasetBuilder_ = null;
+              dataset_ = other.dataset_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              datasetBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   internalGetDatasetFieldBuilder() : null;
+            } else {
+              datasetBuilder_.addAllMessages(other.dataset_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                com.google.protobuf.MapEntry<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>
+                fields__ = input.readMessage(
+                    FieldsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+                internalGetMutableFields().ensureBuilderMap().put(
+                    fields__.getKey(), fields__.getValue());
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 10
+              case 18: {
+                lineage.v1.Lineage.InputField m =
+                    input.readMessage(
+                        lineage.v1.Lineage.InputField.parser(),
+                        extensionRegistry);
+                if (datasetBuilder_ == null) {
+                  ensureDatasetIsMutable();
+                  dataset_.add(m);
+                } else {
+                  datasetBuilder_.addMessage(m);
+                }
+                break;
+              } // case 18
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private static final class FieldsConverter implements com.google.protobuf.MapFieldBuilder.Converter<java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder, lineage.v1.Lineage.OutputFieldLineage> {
+        @java.lang.Override
+        public lineage.v1.Lineage.OutputFieldLineage build(lineage.v1.Lineage.OutputFieldLineageOrBuilder val) {
+          if (val instanceof lineage.v1.Lineage.OutputFieldLineage) { return (lineage.v1.Lineage.OutputFieldLineage) val; }
+          return ((lineage.v1.Lineage.OutputFieldLineage.Builder) val).build();
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.MapEntry<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> defaultEntry() {
+          return FieldsDefaultEntryHolder.defaultEntry;
+        }
+      };
+      private static final FieldsConverter fieldsConverter = new FieldsConverter();
+
+      private com.google.protobuf.MapFieldBuilder<
+          java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder, lineage.v1.Lineage.OutputFieldLineage, lineage.v1.Lineage.OutputFieldLineage.Builder> fields_;
+      private com.google.protobuf.MapFieldBuilder<java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder, lineage.v1.Lineage.OutputFieldLineage, lineage.v1.Lineage.OutputFieldLineage.Builder>
+          internalGetFields() {
+        if (fields_ == null) {
+          return new com.google.protobuf.MapFieldBuilder<>(fieldsConverter);
+        }
+        return fields_;
+      }
+      private com.google.protobuf.MapFieldBuilder<java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder, lineage.v1.Lineage.OutputFieldLineage, lineage.v1.Lineage.OutputFieldLineage.Builder>
+          internalGetMutableFields() {
+        if (fields_ == null) {
+          fields_ = new com.google.protobuf.MapFieldBuilder<>(fieldsConverter);
+        }
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return fields_;
+      }
+      public int getFieldsCount() {
+        return internalGetFields().ensureBuilderMap().size();
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      @java.lang.Override
+      public boolean containsFields(
+          java.lang.String key) {
+        if (key == null) { throw new NullPointerException("map key"); }
+        return internalGetFields().ensureBuilderMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getFieldsMap()} instead.
+       */
+      @java.lang.Override
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> getFields() {
+        return getFieldsMap();
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      @java.lang.Override
+      public java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> getFieldsMap() {
+        return internalGetFields().getImmutableMap();
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      @java.lang.Override
+      public /* nullable */
+lineage.v1.Lineage.OutputFieldLineage getFieldsOrDefault(
+          java.lang.String key,
+          /* nullable */
+lineage.v1.Lineage.OutputFieldLineage defaultValue) {
+        if (key == null) { throw new NullPointerException("map key"); }
+        java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder> map = internalGetMutableFields().ensureBuilderMap();
+        return map.containsKey(key) ? fieldsConverter.build(map.get(key)) : defaultValue;
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      @java.lang.Override
+      public lineage.v1.Lineage.OutputFieldLineage getFieldsOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new NullPointerException("map key"); }
+        java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder> map = internalGetMutableFields().ensureBuilderMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return fieldsConverter.build(map.get(key));
+      }
+      public Builder clearFields() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        internalGetMutableFields().clear();
+        return this;
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      public Builder removeFields(
+          java.lang.String key) {
+        if (key == null) { throw new NullPointerException("map key"); }
+        internalGetMutableFields().ensureBuilderMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage>
+          getMutableFields() {
+        bitField0_ |= 0x00000001;
+        return internalGetMutableFields().ensureMessageMap();
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      public Builder putFields(
+          java.lang.String key,
+          lineage.v1.Lineage.OutputFieldLineage value) {
+        if (key == null) { throw new NullPointerException("map key"); }
+        if (value == null) { throw new NullPointerException("map value"); }
+        internalGetMutableFields().ensureBuilderMap()
+            .put(key, value);
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      public Builder putAllFields(
+          java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> values) {
+        for (java.util.Map.Entry<java.lang.String, lineage.v1.Lineage.OutputFieldLineage> e : values.entrySet()) {
+          if (e.getKey() == null || e.getValue() == null) {
+            throw new NullPointerException();
+          }
+        }
+        internalGetMutableFields().ensureBuilderMap()
+            .putAll(values);
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Per-output-field lineage, keyed by output field name.
+       * </pre>
+       *
+       * <code>map&lt;string, .lineage.v1.OutputFieldLineage&gt; fields = 1 [json_name = "fields"];</code>
+       */
+      public lineage.v1.Lineage.OutputFieldLineage.Builder putFieldsBuilderIfAbsent(
+          java.lang.String key) {
+        java.util.Map<java.lang.String, lineage.v1.Lineage.OutputFieldLineageOrBuilder> builderMap = internalGetMutableFields().ensureBuilderMap();
+        lineage.v1.Lineage.OutputFieldLineageOrBuilder entry = builderMap.get(key);
+        if (entry == null) {
+          entry = lineage.v1.Lineage.OutputFieldLineage.newBuilder();
+          builderMap.put(key, entry);
+        }
+        if (entry instanceof lineage.v1.Lineage.OutputFieldLineage) {
+          entry = ((lineage.v1.Lineage.OutputFieldLineage) entry).toBuilder();
+          builderMap.put(key, entry);
+        }
+        return (lineage.v1.Lineage.OutputFieldLineage.Builder) entry;
+      }
+
+      private java.util.List<lineage.v1.Lineage.InputField> dataset_ =
+        java.util.Collections.emptyList();
+      private void ensureDatasetIsMutable() {
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          dataset_ = new java.util.ArrayList<lineage.v1.Lineage.InputField>(dataset_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          lineage.v1.Lineage.InputField, lineage.v1.Lineage.InputField.Builder, lineage.v1.Lineage.InputFieldOrBuilder> datasetBuilder_;
+
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public java.util.List<lineage.v1.Lineage.InputField> getDatasetList() {
+        if (datasetBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(dataset_);
+        } else {
+          return datasetBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public int getDatasetCount() {
+        if (datasetBuilder_ == null) {
+          return dataset_.size();
+        } else {
+          return datasetBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public lineage.v1.Lineage.InputField getDataset(int index) {
+        if (datasetBuilder_ == null) {
+          return dataset_.get(index);
+        } else {
+          return datasetBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder setDataset(
+          int index, lineage.v1.Lineage.InputField value) {
+        if (datasetBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDatasetIsMutable();
+          dataset_.set(index, value);
+          onChanged();
+        } else {
+          datasetBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder setDataset(
+          int index, lineage.v1.Lineage.InputField.Builder builderForValue) {
+        if (datasetBuilder_ == null) {
+          ensureDatasetIsMutable();
+          dataset_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          datasetBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder addDataset(lineage.v1.Lineage.InputField value) {
+        if (datasetBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDatasetIsMutable();
+          dataset_.add(value);
+          onChanged();
+        } else {
+          datasetBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder addDataset(
+          int index, lineage.v1.Lineage.InputField value) {
+        if (datasetBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureDatasetIsMutable();
+          dataset_.add(index, value);
+          onChanged();
+        } else {
+          datasetBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder addDataset(
+          lineage.v1.Lineage.InputField.Builder builderForValue) {
+        if (datasetBuilder_ == null) {
+          ensureDatasetIsMutable();
+          dataset_.add(builderForValue.build());
+          onChanged();
+        } else {
+          datasetBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder addDataset(
+          int index, lineage.v1.Lineage.InputField.Builder builderForValue) {
+        if (datasetBuilder_ == null) {
+          ensureDatasetIsMutable();
+          dataset_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          datasetBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder addAllDataset(
+          java.lang.Iterable<? extends lineage.v1.Lineage.InputField> values) {
+        if (datasetBuilder_ == null) {
+          ensureDatasetIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, dataset_);
+          onChanged();
+        } else {
+          datasetBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder clearDataset() {
+        if (datasetBuilder_ == null) {
+          dataset_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          datasetBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public Builder removeDataset(int index) {
+        if (datasetBuilder_ == null) {
+          ensureDatasetIsMutable();
+          dataset_.remove(index);
+          onChanged();
+        } else {
+          datasetBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public lineage.v1.Lineage.InputField.Builder getDatasetBuilder(
+          int index) {
+        return internalGetDatasetFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public lineage.v1.Lineage.InputFieldOrBuilder getDatasetOrBuilder(
+          int index) {
+        if (datasetBuilder_ == null) {
+          return dataset_.get(index);  } else {
+          return datasetBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public java.util.List<? extends lineage.v1.Lineage.InputFieldOrBuilder> 
+           getDatasetOrBuilderList() {
+        if (datasetBuilder_ != null) {
+          return datasetBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(dataset_);
+        }
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public lineage.v1.Lineage.InputField.Builder addDatasetBuilder() {
+        return internalGetDatasetFieldBuilder().addBuilder(
+            lineage.v1.Lineage.InputField.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public lineage.v1.Lineage.InputField.Builder addDatasetBuilder(
+          int index) {
+        return internalGetDatasetFieldBuilder().addBuilder(
+            index, lineage.v1.Lineage.InputField.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Dataset-level dependencies that affect the whole output (filters, joins,
+       * group-by columns, sort keys, window partitioning, etc.). These do not
+       * map to a single output column.
+       * </pre>
+       *
+       * <code>repeated .lineage.v1.InputField dataset = 2 [json_name = "dataset"];</code>
+       */
+      public java.util.List<lineage.v1.Lineage.InputField.Builder> 
+           getDatasetBuilderList() {
+        return internalGetDatasetFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          lineage.v1.Lineage.InputField, lineage.v1.Lineage.InputField.Builder, lineage.v1.Lineage.InputFieldOrBuilder> 
+          internalGetDatasetFieldBuilder() {
+        if (datasetBuilder_ == null) {
+          datasetBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              lineage.v1.Lineage.InputField, lineage.v1.Lineage.InputField.Builder, lineage.v1.Lineage.InputFieldOrBuilder>(
+                  dataset_,
+                  ((bitField0_ & 0x00000002) != 0),
+                  getParentForChildren(),
+                  isClean());
+          dataset_ = null;
+        }
+        return datasetBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:lineage.v1.ColumnLineageDatasetFacet)
+    }
+
+    // @@protoc_insertion_point(class_scope:lineage.v1.ColumnLineageDatasetFacet)
+    private static final lineage.v1.Lineage.ColumnLineageDatasetFacet DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new lineage.v1.Lineage.ColumnLineageDatasetFacet();
+    }
+
+    public static lineage.v1.Lineage.ColumnLineageDatasetFacet getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<ColumnLineageDatasetFacet>
+        PARSER = new com.google.protobuf.AbstractParser<ColumnLineageDatasetFacet>() {
+      @java.lang.Override
+      public ColumnLineageDatasetFacet parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<ColumnLineageDatasetFacet> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ColumnLineageDatasetFacet> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public lineage.v1.Lineage.ColumnLineageDatasetFacet getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface OutputFieldLineageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:lineage.v1.OutputFieldLineage)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    java.util.List<lineage.v1.Lineage.InputField> 
+        getInputFieldsList();
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    lineage.v1.Lineage.InputField getInputFields(int index);
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    int getInputFieldsCount();
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    java.util.List<? extends lineage.v1.Lineage.InputFieldOrBuilder> 
+        getInputFieldsOrBuilderList();
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    lineage.v1.Lineage.InputFieldOrBuilder getInputFieldsOrBuilder(
+        int index);
+
+    /**
+     * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+     *     See lineage/v1/lineage.proto;l=104
+     * @return The transformationDescription.
+     */
+    @java.lang.Deprecated java.lang.String getTransformationDescription();
+    /**
+     * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+     *     See lineage/v1/lineage.proto;l=104
+     * @return The bytes for transformationDescription.
+     */
+    @java.lang.Deprecated com.google.protobuf.ByteString
+        getTransformationDescriptionBytes();
+
+    /**
+     * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+     *     See lineage/v1/lineage.proto;l=105
+     * @return The transformationType.
+     */
+    @java.lang.Deprecated java.lang.String getTransformationType();
+    /**
+     * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+     *     See lineage/v1/lineage.proto;l=105
+     * @return The bytes for transformationType.
+     */
+    @java.lang.Deprecated com.google.protobuf.ByteString
+        getTransformationTypeBytes();
+  }
+  /**
+   * <pre>
+   * Lineage of a single output column. `inputFields` is the canonical mapping;
+   * `transformation_description` and `transformation_type` mirror the deprecated
+   * fields in the OpenLineage spec and are kept here for spec-completeness.
+   * </pre>
+   *
+   * Protobuf type {@code lineage.v1.OutputFieldLineage}
+   */
+  public static final class OutputFieldLineage extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:lineage.v1.OutputFieldLineage)
+      OutputFieldLineageOrBuilder {
+  private static final long serialVersionUID = 0L;
+    static {
+      com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 34,
+        /* patch= */ 1,
+        /* suffix= */ "",
+        "OutputFieldLineage");
+    }
+    // Use OutputFieldLineage.newBuilder() to construct.
+    private OutputFieldLineage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+    }
+    private OutputFieldLineage() {
+      inputFields_ = java.util.Collections.emptyList();
+      transformationDescription_ = "";
+      transformationType_ = "";
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_OutputFieldLineage_descriptor;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_OutputFieldLineage_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_OutputFieldLineage_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              lineage.v1.Lineage.OutputFieldLineage.class, lineage.v1.Lineage.OutputFieldLineage.Builder.class);
+    }
+
+    public static final int INPUT_FIELDS_FIELD_NUMBER = 1;
+    @SuppressWarnings("serial")
+    private java.util.List<lineage.v1.Lineage.InputField> inputFields_;
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    @java.lang.Override
+    public java.util.List<lineage.v1.Lineage.InputField> getInputFieldsList() {
+      return inputFields_;
+    }
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends lineage.v1.Lineage.InputFieldOrBuilder> 
+        getInputFieldsOrBuilderList() {
+      return inputFields_;
+    }
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    @java.lang.Override
+    public int getInputFieldsCount() {
+      return inputFields_.size();
+    }
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.InputField getInputFields(int index) {
+      return inputFields_.get(index);
+    }
+    /**
+     * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.InputFieldOrBuilder getInputFieldsOrBuilder(
+        int index) {
+      return inputFields_.get(index);
+    }
+
+    public static final int TRANSFORMATION_DESCRIPTION_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object transformationDescription_ = "";
+    /**
+     * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+     *     See lineage/v1/lineage.proto;l=104
+     * @return The transformationDescription.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public java.lang.String getTransformationDescription() {
+      java.lang.Object ref = transformationDescription_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        transformationDescription_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+     *     See lineage/v1/lineage.proto;l=104
+     * @return The bytes for transformationDescription.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public com.google.protobuf.ByteString
+        getTransformationDescriptionBytes() {
+      java.lang.Object ref = transformationDescription_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        transformationDescription_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TRANSFORMATION_TYPE_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object transformationType_ = "";
+    /**
+     * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+     *     See lineage/v1/lineage.proto;l=105
+     * @return The transformationType.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public java.lang.String getTransformationType() {
+      java.lang.Object ref = transformationType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        transformationType_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+     * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+     *     See lineage/v1/lineage.proto;l=105
+     * @return The bytes for transformationType.
+     */
+    @java.lang.Override
+    @java.lang.Deprecated public com.google.protobuf.ByteString
+        getTransformationTypeBytes() {
+      java.lang.Object ref = transformationType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        transformationType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < inputFields_.size(); i++) {
+        output.writeMessage(1, inputFields_.get(i));
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(transformationDescription_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, transformationDescription_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(transformationType_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 3, transformationType_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+
+          {
+            final int count = inputFields_.size();
+            for (int i = 0; i < count; i++) {
+              size += com.google.protobuf.CodedOutputStream
+                .computeMessageSizeNoTag(inputFields_.get(i));
+            }
+            size += 1 * count;
+          }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(transformationDescription_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, transformationDescription_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(transformationType_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(3, transformationType_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof lineage.v1.Lineage.OutputFieldLineage)) {
+        return super.equals(obj);
+      }
+      lineage.v1.Lineage.OutputFieldLineage other = (lineage.v1.Lineage.OutputFieldLineage) obj;
+
+      if (!getInputFieldsList()
+          .equals(other.getInputFieldsList())) return false;
+      if (!getTransformationDescription()
+          .equals(other.getTransformationDescription())) return false;
+      if (!getTransformationType()
+          .equals(other.getTransformationType())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getInputFieldsCount() > 0) {
+        hash = (37 * hash) + INPUT_FIELDS_FIELD_NUMBER;
+        hash = (53 * hash) + getInputFieldsList().hashCode();
+      }
+      hash = (37 * hash) + TRANSFORMATION_DESCRIPTION_FIELD_NUMBER;
+      hash = (53 * hash) + getTransformationDescription().hashCode();
+      hash = (37 * hash) + TRANSFORMATION_TYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getTransformationType().hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static lineage.v1.Lineage.OutputFieldLineage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static lineage.v1.Lineage.OutputFieldLineage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.OutputFieldLineage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(lineage.v1.Lineage.OutputFieldLineage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Lineage of a single output column. `inputFields` is the canonical mapping;
+     * `transformation_description` and `transformation_type` mirror the deprecated
+     * fields in the OpenLineage spec and are kept here for spec-completeness.
+     * </pre>
+     *
+     * Protobuf type {@code lineage.v1.OutputFieldLineage}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:lineage.v1.OutputFieldLineage)
+        lineage.v1.Lineage.OutputFieldLineageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_OutputFieldLineage_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_OutputFieldLineage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                lineage.v1.Lineage.OutputFieldLineage.class, lineage.v1.Lineage.OutputFieldLineage.Builder.class);
+      }
+
+      // Construct using lineage.v1.Lineage.OutputFieldLineage.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        if (inputFieldsBuilder_ == null) {
+          inputFields_ = java.util.Collections.emptyList();
+        } else {
+          inputFields_ = null;
+          inputFieldsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        transformationDescription_ = "";
+        transformationType_ = "";
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_OutputFieldLineage_descriptor;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.OutputFieldLineage getDefaultInstanceForType() {
+        return lineage.v1.Lineage.OutputFieldLineage.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.OutputFieldLineage build() {
+        lineage.v1.Lineage.OutputFieldLineage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.OutputFieldLineage buildPartial() {
+        lineage.v1.Lineage.OutputFieldLineage result = new lineage.v1.Lineage.OutputFieldLineage(this);
+        buildPartialRepeatedFields(result);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartialRepeatedFields(lineage.v1.Lineage.OutputFieldLineage result) {
+        if (inputFieldsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            inputFields_ = java.util.Collections.unmodifiableList(inputFields_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.inputFields_ = inputFields_;
+        } else {
+          result.inputFields_ = inputFieldsBuilder_.build();
+        }
+      }
+
+      private void buildPartial0(lineage.v1.Lineage.OutputFieldLineage result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.transformationDescription_ = transformationDescription_;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.transformationType_ = transformationType_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof lineage.v1.Lineage.OutputFieldLineage) {
+          return mergeFrom((lineage.v1.Lineage.OutputFieldLineage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(lineage.v1.Lineage.OutputFieldLineage other) {
+        if (other == lineage.v1.Lineage.OutputFieldLineage.getDefaultInstance()) return this;
+        if (inputFieldsBuilder_ == null) {
+          if (!other.inputFields_.isEmpty()) {
+            if (inputFields_.isEmpty()) {
+              inputFields_ = other.inputFields_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureInputFieldsIsMutable();
+              inputFields_.addAll(other.inputFields_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.inputFields_.isEmpty()) {
+            if (inputFieldsBuilder_.isEmpty()) {
+              inputFieldsBuilder_.dispose();
+              inputFieldsBuilder_ = null;
+              inputFields_ = other.inputFields_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              inputFieldsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   internalGetInputFieldsFieldBuilder() : null;
+            } else {
+              inputFieldsBuilder_.addAllMessages(other.inputFields_);
+            }
+          }
+        }
+        if (!other.getTransformationDescription().isEmpty()) {
+          transformationDescription_ = other.transformationDescription_;
+          bitField0_ |= 0x00000002;
+          onChanged();
+        }
+        if (!other.getTransformationType().isEmpty()) {
+          transformationType_ = other.transformationType_;
+          bitField0_ |= 0x00000004;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                lineage.v1.Lineage.InputField m =
+                    input.readMessage(
+                        lineage.v1.Lineage.InputField.parser(),
+                        extensionRegistry);
+                if (inputFieldsBuilder_ == null) {
+                  ensureInputFieldsIsMutable();
+                  inputFields_.add(m);
+                } else {
+                  inputFieldsBuilder_.addMessage(m);
+                }
+                break;
+              } // case 10
+              case 18: {
+                transformationDescription_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000002;
+                break;
+              } // case 18
+              case 26: {
+                transformationType_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000004;
+                break;
+              } // case 26
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<lineage.v1.Lineage.InputField> inputFields_ =
+        java.util.Collections.emptyList();
+      private void ensureInputFieldsIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          inputFields_ = new java.util.ArrayList<lineage.v1.Lineage.InputField>(inputFields_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          lineage.v1.Lineage.InputField, lineage.v1.Lineage.InputField.Builder, lineage.v1.Lineage.InputFieldOrBuilder> inputFieldsBuilder_;
+
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public java.util.List<lineage.v1.Lineage.InputField> getInputFieldsList() {
+        if (inputFieldsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(inputFields_);
+        } else {
+          return inputFieldsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public int getInputFieldsCount() {
+        if (inputFieldsBuilder_ == null) {
+          return inputFields_.size();
+        } else {
+          return inputFieldsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public lineage.v1.Lineage.InputField getInputFields(int index) {
+        if (inputFieldsBuilder_ == null) {
+          return inputFields_.get(index);
+        } else {
+          return inputFieldsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder setInputFields(
+          int index, lineage.v1.Lineage.InputField value) {
+        if (inputFieldsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureInputFieldsIsMutable();
+          inputFields_.set(index, value);
+          onChanged();
+        } else {
+          inputFieldsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder setInputFields(
+          int index, lineage.v1.Lineage.InputField.Builder builderForValue) {
+        if (inputFieldsBuilder_ == null) {
+          ensureInputFieldsIsMutable();
+          inputFields_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          inputFieldsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder addInputFields(lineage.v1.Lineage.InputField value) {
+        if (inputFieldsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureInputFieldsIsMutable();
+          inputFields_.add(value);
+          onChanged();
+        } else {
+          inputFieldsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder addInputFields(
+          int index, lineage.v1.Lineage.InputField value) {
+        if (inputFieldsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureInputFieldsIsMutable();
+          inputFields_.add(index, value);
+          onChanged();
+        } else {
+          inputFieldsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder addInputFields(
+          lineage.v1.Lineage.InputField.Builder builderForValue) {
+        if (inputFieldsBuilder_ == null) {
+          ensureInputFieldsIsMutable();
+          inputFields_.add(builderForValue.build());
+          onChanged();
+        } else {
+          inputFieldsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder addInputFields(
+          int index, lineage.v1.Lineage.InputField.Builder builderForValue) {
+        if (inputFieldsBuilder_ == null) {
+          ensureInputFieldsIsMutable();
+          inputFields_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          inputFieldsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder addAllInputFields(
+          java.lang.Iterable<? extends lineage.v1.Lineage.InputField> values) {
+        if (inputFieldsBuilder_ == null) {
+          ensureInputFieldsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, inputFields_);
+          onChanged();
+        } else {
+          inputFieldsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder clearInputFields() {
+        if (inputFieldsBuilder_ == null) {
+          inputFields_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          inputFieldsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public Builder removeInputFields(int index) {
+        if (inputFieldsBuilder_ == null) {
+          ensureInputFieldsIsMutable();
+          inputFields_.remove(index);
+          onChanged();
+        } else {
+          inputFieldsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public lineage.v1.Lineage.InputField.Builder getInputFieldsBuilder(
+          int index) {
+        return internalGetInputFieldsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public lineage.v1.Lineage.InputFieldOrBuilder getInputFieldsOrBuilder(
+          int index) {
+        if (inputFieldsBuilder_ == null) {
+          return inputFields_.get(index);  } else {
+          return inputFieldsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public java.util.List<? extends lineage.v1.Lineage.InputFieldOrBuilder> 
+           getInputFieldsOrBuilderList() {
+        if (inputFieldsBuilder_ != null) {
+          return inputFieldsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(inputFields_);
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public lineage.v1.Lineage.InputField.Builder addInputFieldsBuilder() {
+        return internalGetInputFieldsFieldBuilder().addBuilder(
+            lineage.v1.Lineage.InputField.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public lineage.v1.Lineage.InputField.Builder addInputFieldsBuilder(
+          int index) {
+        return internalGetInputFieldsFieldBuilder().addBuilder(
+            index, lineage.v1.Lineage.InputField.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .lineage.v1.InputField input_fields = 1 [json_name = "inputFields"];</code>
+       */
+      public java.util.List<lineage.v1.Lineage.InputField.Builder> 
+           getInputFieldsBuilderList() {
+        return internalGetInputFieldsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          lineage.v1.Lineage.InputField, lineage.v1.Lineage.InputField.Builder, lineage.v1.Lineage.InputFieldOrBuilder> 
+          internalGetInputFieldsFieldBuilder() {
+        if (inputFieldsBuilder_ == null) {
+          inputFieldsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              lineage.v1.Lineage.InputField, lineage.v1.Lineage.InputField.Builder, lineage.v1.Lineage.InputFieldOrBuilder>(
+                  inputFields_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          inputFields_ = null;
+        }
+        return inputFieldsBuilder_;
+      }
+
+      private java.lang.Object transformationDescription_ = "";
+      /**
+       * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+       *     See lineage/v1/lineage.proto;l=104
+       * @return The transformationDescription.
+       */
+      @java.lang.Deprecated public java.lang.String getTransformationDescription() {
+        java.lang.Object ref = transformationDescription_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          transformationDescription_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+       *     See lineage/v1/lineage.proto;l=104
+       * @return The bytes for transformationDescription.
+       */
+      @java.lang.Deprecated public com.google.protobuf.ByteString
+          getTransformationDescriptionBytes() {
+        java.lang.Object ref = transformationDescription_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          transformationDescription_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+       *     See lineage/v1/lineage.proto;l=104
+       * @param value The transformationDescription to set.
+       * @return This builder for chaining.
+       */
+      @java.lang.Deprecated public Builder setTransformationDescription(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        transformationDescription_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+       *     See lineage/v1/lineage.proto;l=104
+       * @return This builder for chaining.
+       */
+      @java.lang.Deprecated public Builder clearTransformationDescription() {
+        transformationDescription_ = getDefaultInstance().getTransformationDescription();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string transformation_description = 2 [json_name = "transformationDescription", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_description is deprecated.
+       *     See lineage/v1/lineage.proto;l=104
+       * @param value The bytes for transformationDescription to set.
+       * @return This builder for chaining.
+       */
+      @java.lang.Deprecated public Builder setTransformationDescriptionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        transformationDescription_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object transformationType_ = "";
+      /**
+       * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+       *     See lineage/v1/lineage.proto;l=105
+       * @return The transformationType.
+       */
+      @java.lang.Deprecated public java.lang.String getTransformationType() {
+        java.lang.Object ref = transformationType_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          transformationType_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+       *     See lineage/v1/lineage.proto;l=105
+       * @return The bytes for transformationType.
+       */
+      @java.lang.Deprecated public com.google.protobuf.ByteString
+          getTransformationTypeBytes() {
+        java.lang.Object ref = transformationType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          transformationType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+       *     See lineage/v1/lineage.proto;l=105
+       * @param value The transformationType to set.
+       * @return This builder for chaining.
+       */
+      @java.lang.Deprecated public Builder setTransformationType(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        transformationType_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+       *     See lineage/v1/lineage.proto;l=105
+       * @return This builder for chaining.
+       */
+      @java.lang.Deprecated public Builder clearTransformationType() {
+        transformationType_ = getDefaultInstance().getTransformationType();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string transformation_type = 3 [json_name = "transformationType", deprecated = true];</code>
+       * @deprecated lineage.v1.OutputFieldLineage.transformation_type is deprecated.
+       *     See lineage/v1/lineage.proto;l=105
+       * @param value The bytes for transformationType to set.
+       * @return This builder for chaining.
+       */
+      @java.lang.Deprecated public Builder setTransformationTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        transformationType_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:lineage.v1.OutputFieldLineage)
+    }
+
+    // @@protoc_insertion_point(class_scope:lineage.v1.OutputFieldLineage)
+    private static final lineage.v1.Lineage.OutputFieldLineage DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new lineage.v1.Lineage.OutputFieldLineage();
+    }
+
+    public static lineage.v1.Lineage.OutputFieldLineage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<OutputFieldLineage>
+        PARSER = new com.google.protobuf.AbstractParser<OutputFieldLineage>() {
+      @java.lang.Override
+      public OutputFieldLineage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<OutputFieldLineage> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<OutputFieldLineage> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public lineage.v1.Lineage.OutputFieldLineage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface InputFieldOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:lineage.v1.InputField)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+     * @return The namespace.
+     */
+    java.lang.String getNamespace();
+    /**
+     * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for namespace.
+     */
+    com.google.protobuf.ByteString
+        getNamespaceBytes();
+
+    /**
+     * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+     * @return The name.
+     */
+    java.lang.String getName();
+    /**
+     * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for name.
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
+
+    /**
+     * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+     * @return The field.
+     */
+    java.lang.String getField();
+    /**
+     * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for field.
+     */
+    com.google.protobuf.ByteString
+        getFieldBytes();
+
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    java.util.List<lineage.v1.Lineage.FieldTransformation> 
+        getTransformationsList();
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    lineage.v1.Lineage.FieldTransformation getTransformations(int index);
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    int getTransformationsCount();
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    java.util.List<? extends lineage.v1.Lineage.FieldTransformationOrBuilder> 
+        getTransformationsOrBuilderList();
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    lineage.v1.Lineage.FieldTransformationOrBuilder getTransformationsOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * A single column-level dependency on a source dataset's field.
+   * </pre>
+   *
+   * Protobuf type {@code lineage.v1.InputField}
+   */
+  public static final class InputField extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:lineage.v1.InputField)
+      InputFieldOrBuilder {
+  private static final long serialVersionUID = 0L;
+    static {
+      com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 34,
+        /* patch= */ 1,
+        /* suffix= */ "",
+        "InputField");
+    }
+    // Use InputField.newBuilder() to construct.
+    private InputField(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+    }
+    private InputField() {
+      namespace_ = "";
+      name_ = "";
+      field_ = "";
+      transformations_ = java.util.Collections.emptyList();
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_InputField_descriptor;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_InputField_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_InputField_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              lineage.v1.Lineage.InputField.class, lineage.v1.Lineage.InputField.Builder.class);
+    }
+
+    public static final int NAMESPACE_FIELD_NUMBER = 1;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object namespace_ = "";
+    /**
+     * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+     * @return The namespace.
+     */
+    @java.lang.Override
+    public java.lang.String getNamespace() {
+      java.lang.Object ref = namespace_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        namespace_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for namespace.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getNamespaceBytes() {
+      java.lang.Object ref = namespace_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        namespace_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int NAME_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object name_ = "";
+    /**
+     * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+     * @return The name.
+     */
+    @java.lang.Override
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        name_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for name.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int FIELD_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object field_ = "";
+    /**
+     * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+     * @return The field.
+     */
+    @java.lang.Override
+    public java.lang.String getField() {
+      java.lang.Object ref = field_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        field_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+     * @return The bytes for field.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getFieldBytes() {
+      java.lang.Object ref = field_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        field_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TRANSFORMATIONS_FIELD_NUMBER = 4;
+    @SuppressWarnings("serial")
+    private java.util.List<lineage.v1.Lineage.FieldTransformation> transformations_;
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    @java.lang.Override
+    public java.util.List<lineage.v1.Lineage.FieldTransformation> getTransformationsList() {
+      return transformations_;
+    }
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends lineage.v1.Lineage.FieldTransformationOrBuilder> 
+        getTransformationsOrBuilderList() {
+      return transformations_;
+    }
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    @java.lang.Override
+    public int getTransformationsCount() {
+      return transformations_.size();
+    }
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.FieldTransformation getTransformations(int index) {
+      return transformations_.get(index);
+    }
+    /**
+     * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+     */
+    @java.lang.Override
+    public lineage.v1.Lineage.FieldTransformationOrBuilder getTransformationsOrBuilder(
+        int index) {
+      return transformations_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(namespace_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, namespace_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(name_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, name_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(field_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 3, field_);
+      }
+      for (int i = 0; i < transformations_.size(); i++) {
+        output.writeMessage(4, transformations_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(namespace_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(1, namespace_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(name_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, name_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(field_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(3, field_);
+      }
+
+          {
+            final int count = transformations_.size();
+            for (int i = 0; i < count; i++) {
+              size += com.google.protobuf.CodedOutputStream
+                .computeMessageSizeNoTag(transformations_.get(i));
+            }
+            size += 1 * count;
+          }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof lineage.v1.Lineage.InputField)) {
+        return super.equals(obj);
+      }
+      lineage.v1.Lineage.InputField other = (lineage.v1.Lineage.InputField) obj;
+
+      if (!getNamespace()
+          .equals(other.getNamespace())) return false;
+      if (!getName()
+          .equals(other.getName())) return false;
+      if (!getField()
+          .equals(other.getField())) return false;
+      if (!getTransformationsList()
+          .equals(other.getTransformationsList())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + NAMESPACE_FIELD_NUMBER;
+      hash = (53 * hash) + getNamespace().hashCode();
+      hash = (37 * hash) + NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getName().hashCode();
+      hash = (37 * hash) + FIELD_FIELD_NUMBER;
+      hash = (53 * hash) + getField().hashCode();
+      if (getTransformationsCount() > 0) {
+        hash = (37 * hash) + TRANSFORMATIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getTransformationsList().hashCode();
+      }
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static lineage.v1.Lineage.InputField parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static lineage.v1.Lineage.InputField parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static lineage.v1.Lineage.InputField parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.InputField parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(lineage.v1.Lineage.InputField prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * A single column-level dependency on a source dataset's field.
+     * </pre>
+     *
+     * Protobuf type {@code lineage.v1.InputField}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:lineage.v1.InputField)
+        lineage.v1.Lineage.InputFieldOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_InputField_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_InputField_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                lineage.v1.Lineage.InputField.class, lineage.v1.Lineage.InputField.Builder.class);
+      }
+
+      // Construct using lineage.v1.Lineage.InputField.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        namespace_ = "";
+        name_ = "";
+        field_ = "";
+        if (transformationsBuilder_ == null) {
+          transformations_ = java.util.Collections.emptyList();
+        } else {
+          transformations_ = null;
+          transformationsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_InputField_descriptor;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.InputField getDefaultInstanceForType() {
+        return lineage.v1.Lineage.InputField.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.InputField build() {
+        lineage.v1.Lineage.InputField result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.InputField buildPartial() {
+        lineage.v1.Lineage.InputField result = new lineage.v1.Lineage.InputField(this);
+        buildPartialRepeatedFields(result);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartialRepeatedFields(lineage.v1.Lineage.InputField result) {
+        if (transformationsBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0)) {
+            transformations_ = java.util.Collections.unmodifiableList(transformations_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.transformations_ = transformations_;
+        } else {
+          result.transformations_ = transformationsBuilder_.build();
+        }
+      }
+
+      private void buildPartial0(lineage.v1.Lineage.InputField result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.namespace_ = namespace_;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.name_ = name_;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.field_ = field_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof lineage.v1.Lineage.InputField) {
+          return mergeFrom((lineage.v1.Lineage.InputField)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(lineage.v1.Lineage.InputField other) {
+        if (other == lineage.v1.Lineage.InputField.getDefaultInstance()) return this;
+        if (!other.getNamespace().isEmpty()) {
+          namespace_ = other.namespace_;
+          bitField0_ |= 0x00000001;
+          onChanged();
+        }
+        if (!other.getName().isEmpty()) {
+          name_ = other.name_;
+          bitField0_ |= 0x00000002;
+          onChanged();
+        }
+        if (!other.getField().isEmpty()) {
+          field_ = other.field_;
+          bitField0_ |= 0x00000004;
+          onChanged();
+        }
+        if (transformationsBuilder_ == null) {
+          if (!other.transformations_.isEmpty()) {
+            if (transformations_.isEmpty()) {
+              transformations_ = other.transformations_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensureTransformationsIsMutable();
+              transformations_.addAll(other.transformations_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.transformations_.isEmpty()) {
+            if (transformationsBuilder_.isEmpty()) {
+              transformationsBuilder_.dispose();
+              transformationsBuilder_ = null;
+              transformations_ = other.transformations_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+              transformationsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   internalGetTransformationsFieldBuilder() : null;
+            } else {
+              transformationsBuilder_.addAllMessages(other.transformations_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                namespace_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 10
+              case 18: {
+                name_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000002;
+                break;
+              } // case 18
+              case 26: {
+                field_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000004;
+                break;
+              } // case 26
+              case 34: {
+                lineage.v1.Lineage.FieldTransformation m =
+                    input.readMessage(
+                        lineage.v1.Lineage.FieldTransformation.parser(),
+                        extensionRegistry);
+                if (transformationsBuilder_ == null) {
+                  ensureTransformationsIsMutable();
+                  transformations_.add(m);
+                } else {
+                  transformationsBuilder_.addMessage(m);
+                }
+                break;
+              } // case 34
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object namespace_ = "";
+      /**
+       * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+       * @return The namespace.
+       */
+      public java.lang.String getNamespace() {
+        java.lang.Object ref = namespace_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          namespace_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+       * @return The bytes for namespace.
+       */
+      public com.google.protobuf.ByteString
+          getNamespaceBytes() {
+        java.lang.Object ref = namespace_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          namespace_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+       * @param value The namespace to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNamespace(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        namespace_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearNamespace() {
+        namespace_ = getDefaultInstance().getNamespace();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string namespace = 1 [json_name = "namespace", (.buf.validate.field) = { ... }</code>
+       * @param value The bytes for namespace to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNamespaceBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        namespace_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object name_ = "";
+      /**
+       * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+       * @return The name.
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+       * @return The bytes for name.
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        name_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearName() {
+        name_ = getDefaultInstance().getName();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string name = 2 [json_name = "name", (.buf.validate.field) = { ... }</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        name_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object field_ = "";
+      /**
+       * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+       * @return The field.
+       */
+      public java.lang.String getField() {
+        java.lang.Object ref = field_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          field_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+       * @return The bytes for field.
+       */
+      public com.google.protobuf.ByteString
+          getFieldBytes() {
+        java.lang.Object ref = field_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          field_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+       * @param value The field to set.
+       * @return This builder for chaining.
+       */
+      public Builder setField(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        field_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearField() {
+        field_ = getDefaultInstance().getField();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string field = 3 [json_name = "field", (.buf.validate.field) = { ... }</code>
+       * @param value The bytes for field to set.
+       * @return This builder for chaining.
+       */
+      public Builder setFieldBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        field_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<lineage.v1.Lineage.FieldTransformation> transformations_ =
+        java.util.Collections.emptyList();
+      private void ensureTransformationsIsMutable() {
+        if (!((bitField0_ & 0x00000008) != 0)) {
+          transformations_ = new java.util.ArrayList<lineage.v1.Lineage.FieldTransformation>(transformations_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          lineage.v1.Lineage.FieldTransformation, lineage.v1.Lineage.FieldTransformation.Builder, lineage.v1.Lineage.FieldTransformationOrBuilder> transformationsBuilder_;
+
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public java.util.List<lineage.v1.Lineage.FieldTransformation> getTransformationsList() {
+        if (transformationsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(transformations_);
+        } else {
+          return transformationsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public int getTransformationsCount() {
+        if (transformationsBuilder_ == null) {
+          return transformations_.size();
+        } else {
+          return transformationsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public lineage.v1.Lineage.FieldTransformation getTransformations(int index) {
+        if (transformationsBuilder_ == null) {
+          return transformations_.get(index);
+        } else {
+          return transformationsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder setTransformations(
+          int index, lineage.v1.Lineage.FieldTransformation value) {
+        if (transformationsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransformationsIsMutable();
+          transformations_.set(index, value);
+          onChanged();
+        } else {
+          transformationsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder setTransformations(
+          int index, lineage.v1.Lineage.FieldTransformation.Builder builderForValue) {
+        if (transformationsBuilder_ == null) {
+          ensureTransformationsIsMutable();
+          transformations_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          transformationsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder addTransformations(lineage.v1.Lineage.FieldTransformation value) {
+        if (transformationsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransformationsIsMutable();
+          transformations_.add(value);
+          onChanged();
+        } else {
+          transformationsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder addTransformations(
+          int index, lineage.v1.Lineage.FieldTransformation value) {
+        if (transformationsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransformationsIsMutable();
+          transformations_.add(index, value);
+          onChanged();
+        } else {
+          transformationsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder addTransformations(
+          lineage.v1.Lineage.FieldTransformation.Builder builderForValue) {
+        if (transformationsBuilder_ == null) {
+          ensureTransformationsIsMutable();
+          transformations_.add(builderForValue.build());
+          onChanged();
+        } else {
+          transformationsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder addTransformations(
+          int index, lineage.v1.Lineage.FieldTransformation.Builder builderForValue) {
+        if (transformationsBuilder_ == null) {
+          ensureTransformationsIsMutable();
+          transformations_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          transformationsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder addAllTransformations(
+          java.lang.Iterable<? extends lineage.v1.Lineage.FieldTransformation> values) {
+        if (transformationsBuilder_ == null) {
+          ensureTransformationsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, transformations_);
+          onChanged();
+        } else {
+          transformationsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder clearTransformations() {
+        if (transformationsBuilder_ == null) {
+          transformations_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+          onChanged();
+        } else {
+          transformationsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public Builder removeTransformations(int index) {
+        if (transformationsBuilder_ == null) {
+          ensureTransformationsIsMutable();
+          transformations_.remove(index);
+          onChanged();
+        } else {
+          transformationsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public lineage.v1.Lineage.FieldTransformation.Builder getTransformationsBuilder(
+          int index) {
+        return internalGetTransformationsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public lineage.v1.Lineage.FieldTransformationOrBuilder getTransformationsOrBuilder(
+          int index) {
+        if (transformationsBuilder_ == null) {
+          return transformations_.get(index);  } else {
+          return transformationsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public java.util.List<? extends lineage.v1.Lineage.FieldTransformationOrBuilder> 
+           getTransformationsOrBuilderList() {
+        if (transformationsBuilder_ != null) {
+          return transformationsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(transformations_);
+        }
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public lineage.v1.Lineage.FieldTransformation.Builder addTransformationsBuilder() {
+        return internalGetTransformationsFieldBuilder().addBuilder(
+            lineage.v1.Lineage.FieldTransformation.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public lineage.v1.Lineage.FieldTransformation.Builder addTransformationsBuilder(
+          int index) {
+        return internalGetTransformationsFieldBuilder().addBuilder(
+            index, lineage.v1.Lineage.FieldTransformation.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .lineage.v1.FieldTransformation transformations = 4 [json_name = "transformations"];</code>
+       */
+      public java.util.List<lineage.v1.Lineage.FieldTransformation.Builder> 
+           getTransformationsBuilderList() {
+        return internalGetTransformationsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          lineage.v1.Lineage.FieldTransformation, lineage.v1.Lineage.FieldTransformation.Builder, lineage.v1.Lineage.FieldTransformationOrBuilder> 
+          internalGetTransformationsFieldBuilder() {
+        if (transformationsBuilder_ == null) {
+          transformationsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              lineage.v1.Lineage.FieldTransformation, lineage.v1.Lineage.FieldTransformation.Builder, lineage.v1.Lineage.FieldTransformationOrBuilder>(
+                  transformations_,
+                  ((bitField0_ & 0x00000008) != 0),
+                  getParentForChildren(),
+                  isClean());
+          transformations_ = null;
+        }
+        return transformationsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:lineage.v1.InputField)
+    }
+
+    // @@protoc_insertion_point(class_scope:lineage.v1.InputField)
+    private static final lineage.v1.Lineage.InputField DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new lineage.v1.Lineage.InputField();
+    }
+
+    public static lineage.v1.Lineage.InputField getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<InputField>
+        PARSER = new com.google.protobuf.AbstractParser<InputField>() {
+      @java.lang.Override
+      public InputField parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<InputField> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<InputField> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public lineage.v1.Lineage.InputField getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface FieldTransformationOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:lineage.v1.FieldTransformation)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>string type = 1 [json_name = "type"];</code>
+     * @return The type.
+     */
+    java.lang.String getType();
+    /**
+     * <code>string type = 1 [json_name = "type"];</code>
+     * @return The bytes for type.
+     */
+    com.google.protobuf.ByteString
+        getTypeBytes();
+
+    /**
+     * <code>string subtype = 2 [json_name = "subtype"];</code>
+     * @return The subtype.
+     */
+    java.lang.String getSubtype();
+    /**
+     * <code>string subtype = 2 [json_name = "subtype"];</code>
+     * @return The bytes for subtype.
+     */
+    com.google.protobuf.ByteString
+        getSubtypeBytes();
+
+    /**
+     * <code>string description = 3 [json_name = "description"];</code>
+     * @return The description.
+     */
+    java.lang.String getDescription();
+    /**
+     * <code>string description = 3 [json_name = "description"];</code>
+     * @return The bytes for description.
+     */
+    com.google.protobuf.ByteString
+        getDescriptionBytes();
+
+    /**
+     * <code>bool masking = 4 [json_name = "masking"];</code>
+     * @return The masking.
+     */
+    boolean getMasking();
+  }
+  /**
+   * <pre>
+   * Describes the kind of transformation that connects an input field to an
+   * output column.
+   *
+   * `type` is one of:
+   * - DIRECT   — input value flows into the output value
+   * - INDIRECT — input affects the output's row set / ordering / grouping
+   * `subtype` further qualifies the transformation. Common values:
+   * IDENTITY, TRANSFORMATION, AGGREGATION, JOIN, GROUP_BY, FILTER, SORT,
+   * WINDOW, CONDITIONAL.
+   * `masking` is true for transformations that intentionally remove signal
+   * from the input (hashes, redactions, regexp_replace-as-mask, etc.).
+   * </pre>
+   *
+   * Protobuf type {@code lineage.v1.FieldTransformation}
+   */
+  public static final class FieldTransformation extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:lineage.v1.FieldTransformation)
+      FieldTransformationOrBuilder {
+  private static final long serialVersionUID = 0L;
+    static {
+      com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 34,
+        /* patch= */ 1,
+        /* suffix= */ "",
+        "FieldTransformation");
+    }
+    // Use FieldTransformation.newBuilder() to construct.
+    private FieldTransformation(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+    }
+    private FieldTransformation() {
+      type_ = "";
+      subtype_ = "";
+      description_ = "";
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_FieldTransformation_descriptor;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_FieldTransformation_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return lineage.v1.Lineage.internal_static_lineage_v1_FieldTransformation_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              lineage.v1.Lineage.FieldTransformation.class, lineage.v1.Lineage.FieldTransformation.Builder.class);
+    }
+
+    public static final int TYPE_FIELD_NUMBER = 1;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object type_ = "";
+    /**
+     * <code>string type = 1 [json_name = "type"];</code>
+     * @return The type.
+     */
+    @java.lang.Override
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        type_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string type = 1 [json_name = "type"];</code>
+     * @return The bytes for type.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SUBTYPE_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object subtype_ = "";
+    /**
+     * <code>string subtype = 2 [json_name = "subtype"];</code>
+     * @return The subtype.
+     */
+    @java.lang.Override
+    public java.lang.String getSubtype() {
+      java.lang.Object ref = subtype_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        subtype_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string subtype = 2 [json_name = "subtype"];</code>
+     * @return The bytes for subtype.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getSubtypeBytes() {
+      java.lang.Object ref = subtype_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        subtype_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int DESCRIPTION_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object description_ = "";
+    /**
+     * <code>string description = 3 [json_name = "description"];</code>
+     * @return The description.
+     */
+    @java.lang.Override
+    public java.lang.String getDescription() {
+      java.lang.Object ref = description_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        description_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string description = 3 [json_name = "description"];</code>
+     * @return The bytes for description.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getDescriptionBytes() {
+      java.lang.Object ref = description_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        description_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int MASKING_FIELD_NUMBER = 4;
+    private boolean masking_ = false;
+    /**
+     * <code>bool masking = 4 [json_name = "masking"];</code>
+     * @return The masking.
+     */
+    @java.lang.Override
+    public boolean getMasking() {
+      return masking_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(type_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, type_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(subtype_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, subtype_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(description_)) {
+        com.google.protobuf.GeneratedMessage.writeString(output, 3, description_);
+      }
+      if (masking_ != false) {
+        output.writeBool(4, masking_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(type_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(1, type_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(subtype_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, subtype_);
+      }
+      if (!com.google.protobuf.GeneratedMessage.isStringEmpty(description_)) {
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(3, description_);
+      }
+      if (masking_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(4, masking_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof lineage.v1.Lineage.FieldTransformation)) {
+        return super.equals(obj);
+      }
+      lineage.v1.Lineage.FieldTransformation other = (lineage.v1.Lineage.FieldTransformation) obj;
+
+      if (!getType()
+          .equals(other.getType())) return false;
+      if (!getSubtype()
+          .equals(other.getSubtype())) return false;
+      if (!getDescription()
+          .equals(other.getDescription())) return false;
+      if (getMasking()
+          != other.getMasking()) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + TYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getType().hashCode();
+      hash = (37 * hash) + SUBTYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getSubtype().hashCode();
+      hash = (37 * hash) + DESCRIPTION_FIELD_NUMBER;
+      hash = (53 * hash) + getDescription().hashCode();
+      hash = (37 * hash) + MASKING_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getMasking());
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static lineage.v1.Lineage.FieldTransformation parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static lineage.v1.Lineage.FieldTransformation parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input);
+    }
+    public static lineage.v1.Lineage.FieldTransformation parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessage
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(lineage.v1.Lineage.FieldTransformation prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Describes the kind of transformation that connects an input field to an
+     * output column.
+     *
+     * `type` is one of:
+     * - DIRECT   — input value flows into the output value
+     * - INDIRECT — input affects the output's row set / ordering / grouping
+     * `subtype` further qualifies the transformation. Common values:
+     * IDENTITY, TRANSFORMATION, AGGREGATION, JOIN, GROUP_BY, FILTER, SORT,
+     * WINDOW, CONDITIONAL.
+     * `masking` is true for transformations that intentionally remove signal
+     * from the input (hashes, redactions, regexp_replace-as-mask, etc.).
+     * </pre>
+     *
+     * Protobuf type {@code lineage.v1.FieldTransformation}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:lineage.v1.FieldTransformation)
+        lineage.v1.Lineage.FieldTransformationOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_FieldTransformation_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_FieldTransformation_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                lineage.v1.Lineage.FieldTransformation.class, lineage.v1.Lineage.FieldTransformation.Builder.class);
+      }
+
+      // Construct using lineage.v1.Lineage.FieldTransformation.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        type_ = "";
+        subtype_ = "";
+        description_ = "";
+        masking_ = false;
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return lineage.v1.Lineage.internal_static_lineage_v1_FieldTransformation_descriptor;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.FieldTransformation getDefaultInstanceForType() {
+        return lineage.v1.Lineage.FieldTransformation.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.FieldTransformation build() {
+        lineage.v1.Lineage.FieldTransformation result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public lineage.v1.Lineage.FieldTransformation buildPartial() {
+        lineage.v1.Lineage.FieldTransformation result = new lineage.v1.Lineage.FieldTransformation(this);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartial0(lineage.v1.Lineage.FieldTransformation result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.type_ = type_;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.subtype_ = subtype_;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.description_ = description_;
+        }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.masking_ = masking_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof lineage.v1.Lineage.FieldTransformation) {
+          return mergeFrom((lineage.v1.Lineage.FieldTransformation)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(lineage.v1.Lineage.FieldTransformation other) {
+        if (other == lineage.v1.Lineage.FieldTransformation.getDefaultInstance()) return this;
+        if (!other.getType().isEmpty()) {
+          type_ = other.type_;
+          bitField0_ |= 0x00000001;
+          onChanged();
+        }
+        if (!other.getSubtype().isEmpty()) {
+          subtype_ = other.subtype_;
+          bitField0_ |= 0x00000002;
+          onChanged();
+        }
+        if (!other.getDescription().isEmpty()) {
+          description_ = other.description_;
+          bitField0_ |= 0x00000004;
+          onChanged();
+        }
+        if (other.getMasking() != false) {
+          setMasking(other.getMasking());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                type_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 10
+              case 18: {
+                subtype_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000002;
+                break;
+              } // case 18
+              case 26: {
+                description_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000004;
+                break;
+              } // case 26
+              case 32: {
+                masking_ = input.readBool();
+                bitField0_ |= 0x00000008;
+                break;
+              } // case 32
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object type_ = "";
+      /**
+       * <code>string type = 1 [json_name = "type"];</code>
+       * @return The type.
+       */
+      public java.lang.String getType() {
+        java.lang.Object ref = type_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          type_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string type = 1 [json_name = "type"];</code>
+       * @return The bytes for type.
+       */
+      public com.google.protobuf.ByteString
+          getTypeBytes() {
+        java.lang.Object ref = type_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          type_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string type = 1 [json_name = "type"];</code>
+       * @param value The type to set.
+       * @return This builder for chaining.
+       */
+      public Builder setType(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        type_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string type = 1 [json_name = "type"];</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearType() {
+        type_ = getDefaultInstance().getType();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string type = 1 [json_name = "type"];</code>
+       * @param value The bytes for type to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        type_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object subtype_ = "";
+      /**
+       * <code>string subtype = 2 [json_name = "subtype"];</code>
+       * @return The subtype.
+       */
+      public java.lang.String getSubtype() {
+        java.lang.Object ref = subtype_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          subtype_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string subtype = 2 [json_name = "subtype"];</code>
+       * @return The bytes for subtype.
+       */
+      public com.google.protobuf.ByteString
+          getSubtypeBytes() {
+        java.lang.Object ref = subtype_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          subtype_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string subtype = 2 [json_name = "subtype"];</code>
+       * @param value The subtype to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSubtype(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        subtype_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string subtype = 2 [json_name = "subtype"];</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearSubtype() {
+        subtype_ = getDefaultInstance().getSubtype();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string subtype = 2 [json_name = "subtype"];</code>
+       * @param value The bytes for subtype to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSubtypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        subtype_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object description_ = "";
+      /**
+       * <code>string description = 3 [json_name = "description"];</code>
+       * @return The description.
+       */
+      public java.lang.String getDescription() {
+        java.lang.Object ref = description_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          description_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string description = 3 [json_name = "description"];</code>
+       * @return The bytes for description.
+       */
+      public com.google.protobuf.ByteString
+          getDescriptionBytes() {
+        java.lang.Object ref = description_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          description_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string description = 3 [json_name = "description"];</code>
+       * @param value The description to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDescription(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        description_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string description = 3 [json_name = "description"];</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDescription() {
+        description_ = getDefaultInstance().getDescription();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string description = 3 [json_name = "description"];</code>
+       * @param value The bytes for description to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDescriptionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        description_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+
+      private boolean masking_ ;
+      /**
+       * <code>bool masking = 4 [json_name = "masking"];</code>
+       * @return The masking.
+       */
+      @java.lang.Override
+      public boolean getMasking() {
+        return masking_;
+      }
+      /**
+       * <code>bool masking = 4 [json_name = "masking"];</code>
+       * @param value The masking to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMasking(boolean value) {
+
+        masking_ = value;
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>bool masking = 4 [json_name = "masking"];</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMasking() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        masking_ = false;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:lineage.v1.FieldTransformation)
+    }
+
+    // @@protoc_insertion_point(class_scope:lineage.v1.FieldTransformation)
+    private static final lineage.v1.Lineage.FieldTransformation DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new lineage.v1.Lineage.FieldTransformation();
+    }
+
+    public static lineage.v1.Lineage.FieldTransformation getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<FieldTransformation>
+        PARSER = new com.google.protobuf.AbstractParser<FieldTransformation>() {
+      @java.lang.Override
+      public FieldTransformation parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<FieldTransformation> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<FieldTransformation> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public lineage.v1.Lineage.FieldTransformation getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -20634,6 +25790,31 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_lineage_v1_OutputDataset_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_lineage_v1_ColumnLineageDatasetFacet_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_lineage_v1_ColumnLineageDatasetFacet_FieldsEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_lineage_v1_ColumnLineageDatasetFacet_FieldsEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_lineage_v1_OutputFieldLineage_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_lineage_v1_OutputFieldLineage_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_lineage_v1_InputField_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_lineage_v1_InputField_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_lineage_v1_FieldTransformation_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_lineage_v1_FieldTransformation_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_lineage_v1_IngestEventRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -20728,72 +25909,97 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
       "ucer\030\002 \001(\tB\006\272H\003\310\001\001R\010producer\022\035\n\nschema_u" +
       "rl\030\003 \001(\tR\tschemaUrl\0223\n\007dataset\030\004 \001(\0132\031.l" +
       "ineage.v1.StaticDatasetR\007dataset\022\031\n\010raw_" +
-      "json\030\005 \001(\tR\007rawJson\"r\n\rStaticDataset\022\034\n\t" +
-      "namespace\030\001 \001(\tR\tnamespace\022\022\n\004name\030\002 \001(\t" +
-      "R\004name\022/\n\006facets\030\003 \001(\0132\027.google.protobuf" +
-      ".StructR\006facets\"\306\001\n\020OpenLineageEvent\0223\n\t" +
-      "run_event\030\001 \001(\0132\024.lineage.v1.RunEventH\000R" +
-      "\010runEvent\0223\n\tjob_event\030\002 \001(\0132\024.lineage.v" +
-      "1.JobEventH\000R\010jobEvent\022?\n\rdataset_event\030" +
-      "\003 \001(\0132\030.lineage.v1.DatasetEventH\000R\014datas" +
-      "etEventB\007\n\005event\"M\n\003Run\022\025\n\006run_id\030\001 \001(\tR" +
-      "\005runId\022/\n\006facets\030\002 \001(\0132\027.google.protobuf" +
-      ".StructR\006facets\"h\n\003Job\022\034\n\tnamespace\030\001 \001(" +
-      "\tR\tnamespace\022\022\n\004name\030\002 \001(\tR\004name\022/\n\006face" +
-      "ts\030\003 \001(\0132\027.google.protobuf.StructR\006facet" +
-      "s\"\255\001\n\014InputDataset\022\034\n\tnamespace\030\001 \001(\tR\tn" +
-      "amespace\022\022\n\004name\030\002 \001(\tR\004name\022/\n\006facets\030\003" +
-      " \001(\0132\027.google.protobuf.StructR\006facets\022:\n" +
-      "\014input_facets\030\004 \001(\0132\027.google.protobuf.St" +
-      "ructR\013inputFacets\"\260\001\n\rOutputDataset\022\034\n\tn" +
-      "amespace\030\001 \001(\tR\tnamespace\022\022\n\004name\030\002 \001(\tR" +
-      "\004name\022/\n\006facets\030\003 \001(\0132\027.google.protobuf." +
-      "StructR\006facets\022<\n\routput_facets\030\004 \001(\0132\027." +
-      "google.protobuf.StructR\014outputFacets\"@\n\022" +
-      "IngestEventRequest\022*\n\005event\030\001 \001(\0132\024.line" +
-      "age.v1.RunEventR\005event\"-\n\023IngestEventRes" +
-      "ponse\022\026\n\006status\030\001 \001(\tR\006status\"B\n\022IngestB" +
-      "atchRequest\022,\n\006events\030\001 \003(\0132\024.lineage.v1" +
-      ".RunEventR\006events\"1\n\023IngestBatchResponse" +
-      "\022\032\n\010ingested\030\001 \001(\005R\010ingested\"U\n\035IngestOp" +
-      "enLineageBatchRequest\0224\n\006events\030\001 \003(\0132\034." +
-      "lineage.v1.OpenLineageEventR\006events\"\252\001\n\036" +
-      "IngestOpenLineageBatchResponse\022\026\n\006status" +
-      "\030\001 \001(\tR\006status\0222\n\007summary\030\002 \001(\0132\030.lineag" +
-      "e.v1.BatchSummaryR\007summary\022<\n\rfailed_eve" +
-      "nts\030\003 \003(\0132\027.lineage.v1.FailedEventR\014fail" +
-      "edEvents\"\245\001\n\014BatchSummary\022\032\n\010received\030\001 " +
-      "\001(\005R\010received\022\036\n\nsuccessful\030\002 \001(\005R\nsucce" +
-      "ssful\022\026\n\006failed\030\003 \001(\005R\006failed\022\034\n\tretriab" +
-      "le\030\004 \001(\005R\tretriable\022#\n\rnon_retriable\030\005 \001" +
-      "(\005R\014nonRetriable\"Y\n\013FailedEvent\022\024\n\005index" +
-      "\030\001 \001(\005R\005index\022\026\n\006reason\030\002 \001(\tR\006reason\022\034\n" +
-      "\tretriable\030\003 \001(\010R\tretriable\"k\n\023QueryLine" +
-      "ageRequest\022#\n\rjob_namespace\030\001 \001(\tR\014jobNa" +
-      "mespace\022\031\n\010job_name\030\002 \001(\tR\007jobName\022\024\n\005de" +
-      "pth\030\003 \001(\005R\005depth\"\213\001\n\013LineageNode\022\033\n\tnode" +
-      "_type\030\001 \001(\tR\010nodeType\022\034\n\tnamespace\030\002 \001(\t" +
-      "R\tnamespace\022\022\n\004name\030\003 \001(\tR\004name\022-\n\005edges" +
-      "\030\004 \003(\0132\027.lineage.v1.LineageEdgeR\005edges\"\311" +
-      "\001\n\013LineageEdge\022)\n\020source_namespace\030\001 \001(\t" +
-      "R\017sourceNamespace\022\037\n\013source_name\030\002 \001(\tR\n" +
-      "sourceName\022)\n\020target_namespace\030\003 \001(\tR\017ta" +
-      "rgetNamespace\022\037\n\013target_name\030\004 \001(\tR\ntarg" +
-      "etName\022\"\n\014relationship\030\005 \001(\tR\014relationsh" +
-      "ip\"E\n\024QueryLineageResponse\022-\n\005nodes\030\001 \003(" +
-      "\0132\027.lineage.v1.LineageNodeR\005nodes2\364\002\n\016Li" +
-      "neageService\022N\n\013IngestEvent\022\036.lineage.v1" +
-      ".IngestEventRequest\032\037.lineage.v1.IngestE" +
-      "ventResponse\022N\n\013IngestBatch\022\036.lineage.v1" +
-      ".IngestBatchRequest\032\037.lineage.v1.IngestB" +
-      "atchResponse\022o\n\026IngestOpenLineageBatch\022)" +
-      ".lineage.v1.IngestOpenLineageBatchReques" +
-      "t\032*.lineage.v1.IngestOpenLineageBatchRes" +
-      "ponse\022Q\n\014QueryLineage\022\037.lineage.v1.Query" +
-      "LineageRequest\032 .lineage.v1.QueryLineage" +
-      "ResponseBIZGgithub.com/open-lakehouse/op" +
-      "en-lineage-service/gen/lineage/v1;lineag" +
-      "ev1b\006proto3"
+      "json\030\005 \001(\tR\007rawJson\"\300\001\n\rStaticDataset\022\034\n" +
+      "\tnamespace\030\001 \001(\tR\tnamespace\022\022\n\004name\030\002 \001(" +
+      "\tR\004name\022/\n\006facets\030\003 \001(\0132\027.google.protobu" +
+      "f.StructR\006facets\022L\n\016column_lineage\030\004 \001(\013" +
+      "2%.lineage.v1.ColumnLineageDatasetFacetR" +
+      "\rcolumnLineage\"\306\001\n\020OpenLineageEvent\0223\n\tr" +
+      "un_event\030\001 \001(\0132\024.lineage.v1.RunEventH\000R\010" +
+      "runEvent\0223\n\tjob_event\030\002 \001(\0132\024.lineage.v1" +
+      ".JobEventH\000R\010jobEvent\022?\n\rdataset_event\030\003" +
+      " \001(\0132\030.lineage.v1.DatasetEventH\000R\014datase" +
+      "tEventB\007\n\005event\"M\n\003Run\022\025\n\006run_id\030\001 \001(\tR\005" +
+      "runId\022/\n\006facets\030\002 \001(\0132\027.google.protobuf." +
+      "StructR\006facets\"h\n\003Job\022\034\n\tnamespace\030\001 \001(\t" +
+      "R\tnamespace\022\022\n\004name\030\002 \001(\tR\004name\022/\n\006facet" +
+      "s\030\003 \001(\0132\027.google.protobuf.StructR\006facets" +
+      "\"\373\001\n\014InputDataset\022\034\n\tnamespace\030\001 \001(\tR\tna" +
+      "mespace\022\022\n\004name\030\002 \001(\tR\004name\022/\n\006facets\030\003 " +
+      "\001(\0132\027.google.protobuf.StructR\006facets\022:\n\014" +
+      "input_facets\030\004 \001(\0132\027.google.protobuf.Str" +
+      "uctR\013inputFacets\022L\n\016column_lineage\030\005 \001(\013" +
+      "2%.lineage.v1.ColumnLineageDatasetFacetR" +
+      "\rcolumnLineage\"\376\001\n\rOutputDataset\022\034\n\tname" +
+      "space\030\001 \001(\tR\tnamespace\022\022\n\004name\030\002 \001(\tR\004na" +
+      "me\022/\n\006facets\030\003 \001(\0132\027.google.protobuf.Str" +
+      "uctR\006facets\022<\n\routput_facets\030\004 \001(\0132\027.goo" +
+      "gle.protobuf.StructR\014outputFacets\022L\n\016col" +
+      "umn_lineage\030\005 \001(\0132%.lineage.v1.ColumnLin" +
+      "eageDatasetFacetR\rcolumnLineage\"\363\001\n\031Colu" +
+      "mnLineageDatasetFacet\022I\n\006fields\030\001 \003(\01321." +
+      "lineage.v1.ColumnLineageDatasetFacet.Fie" +
+      "ldsEntryR\006fields\0220\n\007dataset\030\002 \003(\0132\026.line" +
+      "age.v1.InputFieldR\007dataset\032Y\n\013FieldsEntr" +
+      "y\022\020\n\003key\030\001 \001(\tR\003key\0224\n\005value\030\002 \001(\0132\036.lin" +
+      "eage.v1.OutputFieldLineageR\005value:\0028\001\"\307\001" +
+      "\n\022OutputFieldLineage\0229\n\014input_fields\030\001 \003" +
+      "(\0132\026.lineage.v1.InputFieldR\013inputFields\022" +
+      "A\n\032transformation_description\030\002 \001(\tB\002\030\001R" +
+      "\031transformationDescription\0223\n\023transforma" +
+      "tion_type\030\003 \001(\tB\002\030\001R\022transformationType\"" +
+      "\267\001\n\nInputField\022$\n\tnamespace\030\001 \001(\tB\006\272H\003\310\001" +
+      "\001R\tnamespace\022\032\n\004name\030\002 \001(\tB\006\272H\003\310\001\001R\004name" +
+      "\022\034\n\005field\030\003 \001(\tB\006\272H\003\310\001\001R\005field\022I\n\017transf" +
+      "ormations\030\004 \003(\0132\037.lineage.v1.FieldTransf" +
+      "ormationR\017transformations\"\177\n\023FieldTransf" +
+      "ormation\022\022\n\004type\030\001 \001(\tR\004type\022\030\n\007subtype\030" +
+      "\002 \001(\tR\007subtype\022 \n\013description\030\003 \001(\tR\013des" +
+      "cription\022\030\n\007masking\030\004 \001(\010R\007masking\"@\n\022In" +
+      "gestEventRequest\022*\n\005event\030\001 \001(\0132\024.lineag" +
+      "e.v1.RunEventR\005event\"-\n\023IngestEventRespo" +
+      "nse\022\026\n\006status\030\001 \001(\tR\006status\"B\n\022IngestBat" +
+      "chRequest\022,\n\006events\030\001 \003(\0132\024.lineage.v1.R" +
+      "unEventR\006events\"1\n\023IngestBatchResponse\022\032" +
+      "\n\010ingested\030\001 \001(\005R\010ingested\"U\n\035IngestOpen" +
+      "LineageBatchRequest\0224\n\006events\030\001 \003(\0132\034.li" +
+      "neage.v1.OpenLineageEventR\006events\"\252\001\n\036In" +
+      "gestOpenLineageBatchResponse\022\026\n\006status\030\001" +
+      " \001(\tR\006status\0222\n\007summary\030\002 \001(\0132\030.lineage." +
+      "v1.BatchSummaryR\007summary\022<\n\rfailed_event" +
+      "s\030\003 \003(\0132\027.lineage.v1.FailedEventR\014failed" +
+      "Events\"\245\001\n\014BatchSummary\022\032\n\010received\030\001 \001(" +
+      "\005R\010received\022\036\n\nsuccessful\030\002 \001(\005R\nsuccess" +
+      "ful\022\026\n\006failed\030\003 \001(\005R\006failed\022\034\n\tretriable" +
+      "\030\004 \001(\005R\tretriable\022#\n\rnon_retriable\030\005 \001(\005" +
+      "R\014nonRetriable\"Y\n\013FailedEvent\022\024\n\005index\030\001" +
+      " \001(\005R\005index\022\026\n\006reason\030\002 \001(\tR\006reason\022\034\n\tr" +
+      "etriable\030\003 \001(\010R\tretriable\"k\n\023QueryLineag" +
+      "eRequest\022#\n\rjob_namespace\030\001 \001(\tR\014jobName" +
+      "space\022\031\n\010job_name\030\002 \001(\tR\007jobName\022\024\n\005dept" +
+      "h\030\003 \001(\005R\005depth\"\213\001\n\013LineageNode\022\033\n\tnode_t" +
+      "ype\030\001 \001(\tR\010nodeType\022\034\n\tnamespace\030\002 \001(\tR\t" +
+      "namespace\022\022\n\004name\030\003 \001(\tR\004name\022-\n\005edges\030\004" +
+      " \003(\0132\027.lineage.v1.LineageEdgeR\005edges\"\311\001\n" +
+      "\013LineageEdge\022)\n\020source_namespace\030\001 \001(\tR\017" +
+      "sourceNamespace\022\037\n\013source_name\030\002 \001(\tR\nso" +
+      "urceName\022)\n\020target_namespace\030\003 \001(\tR\017targ" +
+      "etNamespace\022\037\n\013target_name\030\004 \001(\tR\ntarget" +
+      "Name\022\"\n\014relationship\030\005 \001(\tR\014relationship" +
+      "\"E\n\024QueryLineageResponse\022-\n\005nodes\030\001 \003(\0132" +
+      "\027.lineage.v1.LineageNodeR\005nodes2\364\002\n\016Line" +
+      "ageService\022N\n\013IngestEvent\022\036.lineage.v1.I" +
+      "ngestEventRequest\032\037.lineage.v1.IngestEve" +
+      "ntResponse\022N\n\013IngestBatch\022\036.lineage.v1.I" +
+      "ngestBatchRequest\032\037.lineage.v1.IngestBat" +
+      "chResponse\022o\n\026IngestOpenLineageBatch\022).l" +
+      "ineage.v1.IngestOpenLineageBatchRequest\032" +
+      "*.lineage.v1.IngestOpenLineageBatchRespo" +
+      "nse\022Q\n\014QueryLineage\022\037.lineage.v1.QueryLi" +
+      "neageRequest\032 .lineage.v1.QueryLineageRe" +
+      "sponseBIZGgithub.com/open-lakehouse/open" +
+      "-lineage-service/gen/lineage/v1;lineagev" +
+      "1b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -20825,7 +26031,7 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
     internal_static_lineage_v1_StaticDataset_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_StaticDataset_descriptor,
-        new java.lang.String[] { "Namespace", "Name", "Facets", });
+        new java.lang.String[] { "Namespace", "Name", "Facets", "ColumnLineage", });
     internal_static_lineage_v1_OpenLineageEvent_descriptor =
       getDescriptor().getMessageType(4);
     internal_static_lineage_v1_OpenLineageEvent_fieldAccessorTable = new
@@ -20849,81 +26055,111 @@ public final class Lineage extends com.google.protobuf.GeneratedFile {
     internal_static_lineage_v1_InputDataset_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_InputDataset_descriptor,
-        new java.lang.String[] { "Namespace", "Name", "Facets", "InputFacets", });
+        new java.lang.String[] { "Namespace", "Name", "Facets", "InputFacets", "ColumnLineage", });
     internal_static_lineage_v1_OutputDataset_descriptor =
       getDescriptor().getMessageType(8);
     internal_static_lineage_v1_OutputDataset_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_OutputDataset_descriptor,
-        new java.lang.String[] { "Namespace", "Name", "Facets", "OutputFacets", });
-    internal_static_lineage_v1_IngestEventRequest_descriptor =
+        new java.lang.String[] { "Namespace", "Name", "Facets", "OutputFacets", "ColumnLineage", });
+    internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor =
       getDescriptor().getMessageType(9);
+    internal_static_lineage_v1_ColumnLineageDatasetFacet_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor,
+        new java.lang.String[] { "Fields", "Dataset", });
+    internal_static_lineage_v1_ColumnLineageDatasetFacet_FieldsEntry_descriptor =
+      internal_static_lineage_v1_ColumnLineageDatasetFacet_descriptor.getNestedType(0);
+    internal_static_lineage_v1_ColumnLineageDatasetFacet_FieldsEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_lineage_v1_ColumnLineageDatasetFacet_FieldsEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_lineage_v1_OutputFieldLineage_descriptor =
+      getDescriptor().getMessageType(10);
+    internal_static_lineage_v1_OutputFieldLineage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_lineage_v1_OutputFieldLineage_descriptor,
+        new java.lang.String[] { "InputFields", "TransformationDescription", "TransformationType", });
+    internal_static_lineage_v1_InputField_descriptor =
+      getDescriptor().getMessageType(11);
+    internal_static_lineage_v1_InputField_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_lineage_v1_InputField_descriptor,
+        new java.lang.String[] { "Namespace", "Name", "Field", "Transformations", });
+    internal_static_lineage_v1_FieldTransformation_descriptor =
+      getDescriptor().getMessageType(12);
+    internal_static_lineage_v1_FieldTransformation_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_lineage_v1_FieldTransformation_descriptor,
+        new java.lang.String[] { "Type", "Subtype", "Description", "Masking", });
+    internal_static_lineage_v1_IngestEventRequest_descriptor =
+      getDescriptor().getMessageType(13);
     internal_static_lineage_v1_IngestEventRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_IngestEventRequest_descriptor,
         new java.lang.String[] { "Event", });
     internal_static_lineage_v1_IngestEventResponse_descriptor =
-      getDescriptor().getMessageType(10);
+      getDescriptor().getMessageType(14);
     internal_static_lineage_v1_IngestEventResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_IngestEventResponse_descriptor,
         new java.lang.String[] { "Status", });
     internal_static_lineage_v1_IngestBatchRequest_descriptor =
-      getDescriptor().getMessageType(11);
+      getDescriptor().getMessageType(15);
     internal_static_lineage_v1_IngestBatchRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_IngestBatchRequest_descriptor,
         new java.lang.String[] { "Events", });
     internal_static_lineage_v1_IngestBatchResponse_descriptor =
-      getDescriptor().getMessageType(12);
+      getDescriptor().getMessageType(16);
     internal_static_lineage_v1_IngestBatchResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_IngestBatchResponse_descriptor,
         new java.lang.String[] { "Ingested", });
     internal_static_lineage_v1_IngestOpenLineageBatchRequest_descriptor =
-      getDescriptor().getMessageType(13);
+      getDescriptor().getMessageType(17);
     internal_static_lineage_v1_IngestOpenLineageBatchRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_IngestOpenLineageBatchRequest_descriptor,
         new java.lang.String[] { "Events", });
     internal_static_lineage_v1_IngestOpenLineageBatchResponse_descriptor =
-      getDescriptor().getMessageType(14);
+      getDescriptor().getMessageType(18);
     internal_static_lineage_v1_IngestOpenLineageBatchResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_IngestOpenLineageBatchResponse_descriptor,
         new java.lang.String[] { "Status", "Summary", "FailedEvents", });
     internal_static_lineage_v1_BatchSummary_descriptor =
-      getDescriptor().getMessageType(15);
+      getDescriptor().getMessageType(19);
     internal_static_lineage_v1_BatchSummary_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_BatchSummary_descriptor,
         new java.lang.String[] { "Received", "Successful", "Failed", "Retriable", "NonRetriable", });
     internal_static_lineage_v1_FailedEvent_descriptor =
-      getDescriptor().getMessageType(16);
+      getDescriptor().getMessageType(20);
     internal_static_lineage_v1_FailedEvent_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_FailedEvent_descriptor,
         new java.lang.String[] { "Index", "Reason", "Retriable", });
     internal_static_lineage_v1_QueryLineageRequest_descriptor =
-      getDescriptor().getMessageType(17);
+      getDescriptor().getMessageType(21);
     internal_static_lineage_v1_QueryLineageRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_QueryLineageRequest_descriptor,
         new java.lang.String[] { "JobNamespace", "JobName", "Depth", });
     internal_static_lineage_v1_LineageNode_descriptor =
-      getDescriptor().getMessageType(18);
+      getDescriptor().getMessageType(22);
     internal_static_lineage_v1_LineageNode_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_LineageNode_descriptor,
         new java.lang.String[] { "NodeType", "Namespace", "Name", "Edges", });
     internal_static_lineage_v1_LineageEdge_descriptor =
-      getDescriptor().getMessageType(19);
+      getDescriptor().getMessageType(23);
     internal_static_lineage_v1_LineageEdge_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_LineageEdge_descriptor,
         new java.lang.String[] { "SourceNamespace", "SourceName", "TargetNamespace", "TargetName", "Relationship", });
     internal_static_lineage_v1_QueryLineageResponse_descriptor =
-      getDescriptor().getMessageType(20);
+      getDescriptor().getMessageType(24);
     internal_static_lineage_v1_QueryLineageResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_lineage_v1_QueryLineageResponse_descriptor,

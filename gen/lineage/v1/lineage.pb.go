@@ -301,10 +301,11 @@ func (x *DatasetEvent) GetRawJson() string {
 }
 
 type StaticDataset struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Facets        *structpb.Struct       `protobuf:"bytes,3,opt,name=facets,proto3" json:"facets,omitempty"`
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Namespace     string                     `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Name          string                     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Facets        *structpb.Struct           `protobuf:"bytes,3,opt,name=facets,proto3" json:"facets,omitempty"`
+	ColumnLineage *ColumnLineageDatasetFacet `protobuf:"bytes,4,opt,name=column_lineage,json=columnLineage,proto3" json:"column_lineage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -356,6 +357,13 @@ func (x *StaticDataset) GetName() string {
 func (x *StaticDataset) GetFacets() *structpb.Struct {
 	if x != nil {
 		return x.Facets
+	}
+	return nil
+}
+
+func (x *StaticDataset) GetColumnLineage() *ColumnLineageDatasetFacet {
+	if x != nil {
+		return x.ColumnLineage
 	}
 	return nil
 }
@@ -571,11 +579,12 @@ func (x *Job) GetFacets() *structpb.Struct {
 }
 
 type InputDataset struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Facets        *structpb.Struct       `protobuf:"bytes,3,opt,name=facets,proto3" json:"facets,omitempty"`
-	InputFacets   *structpb.Struct       `protobuf:"bytes,4,opt,name=input_facets,json=inputFacets,proto3" json:"input_facets,omitempty"`
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Namespace     string                     `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Name          string                     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Facets        *structpb.Struct           `protobuf:"bytes,3,opt,name=facets,proto3" json:"facets,omitempty"`
+	InputFacets   *structpb.Struct           `protobuf:"bytes,4,opt,name=input_facets,json=inputFacets,proto3" json:"input_facets,omitempty"`
+	ColumnLineage *ColumnLineageDatasetFacet `protobuf:"bytes,5,opt,name=column_lineage,json=columnLineage,proto3" json:"column_lineage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -638,12 +647,20 @@ func (x *InputDataset) GetInputFacets() *structpb.Struct {
 	return nil
 }
 
+func (x *InputDataset) GetColumnLineage() *ColumnLineageDatasetFacet {
+	if x != nil {
+		return x.ColumnLineage
+	}
+	return nil
+}
+
 type OutputDataset struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Facets        *structpb.Struct       `protobuf:"bytes,3,opt,name=facets,proto3" json:"facets,omitempty"`
-	OutputFacets  *structpb.Struct       `protobuf:"bytes,4,opt,name=output_facets,json=outputFacets,proto3" json:"output_facets,omitempty"`
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Namespace     string                     `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Name          string                     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Facets        *structpb.Struct           `protobuf:"bytes,3,opt,name=facets,proto3" json:"facets,omitempty"`
+	OutputFacets  *structpb.Struct           `protobuf:"bytes,4,opt,name=output_facets,json=outputFacets,proto3" json:"output_facets,omitempty"`
+	ColumnLineage *ColumnLineageDatasetFacet `protobuf:"bytes,5,opt,name=column_lineage,json=columnLineage,proto3" json:"column_lineage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -706,6 +723,295 @@ func (x *OutputDataset) GetOutputFacets() *structpb.Struct {
 	return nil
 }
 
+func (x *OutputDataset) GetColumnLineage() *ColumnLineageDatasetFacet {
+	if x != nil {
+		return x.ColumnLineage
+	}
+	return nil
+}
+
+// ColumnLineageDatasetFacet is a typed model of the OpenLineage 1-2-0
+// `ColumnLineageDatasetFacet` (https://openlineage.io/spec/facets/1-2-0/ColumnLineageDatasetFacet.json).
+//
+// Carrying it as a strong proto type — rather than burying it inside
+// `google.protobuf.Struct facets` — lets downstream Go/Rust readers consume
+// column lineage without re-parsing arbitrary JSON shapes, which is important
+// because nested struct/array columns can blow past `Struct`'s practical
+// nesting depth (~100 levels) on real-world plans.
+type ColumnLineageDatasetFacet struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Per-output-field lineage, keyed by output field name.
+	Fields map[string]*OutputFieldLineage `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Dataset-level dependencies that affect the whole output (filters, joins,
+	// group-by columns, sort keys, window partitioning, etc.). These do not
+	// map to a single output column.
+	Dataset       []*InputField `protobuf:"bytes,2,rep,name=dataset,proto3" json:"dataset,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ColumnLineageDatasetFacet) Reset() {
+	*x = ColumnLineageDatasetFacet{}
+	mi := &file_lineage_v1_lineage_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ColumnLineageDatasetFacet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ColumnLineageDatasetFacet) ProtoMessage() {}
+
+func (x *ColumnLineageDatasetFacet) ProtoReflect() protoreflect.Message {
+	mi := &file_lineage_v1_lineage_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ColumnLineageDatasetFacet.ProtoReflect.Descriptor instead.
+func (*ColumnLineageDatasetFacet) Descriptor() ([]byte, []int) {
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ColumnLineageDatasetFacet) GetFields() map[string]*OutputFieldLineage {
+	if x != nil {
+		return x.Fields
+	}
+	return nil
+}
+
+func (x *ColumnLineageDatasetFacet) GetDataset() []*InputField {
+	if x != nil {
+		return x.Dataset
+	}
+	return nil
+}
+
+// Lineage of a single output column. `inputFields` is the canonical mapping;
+// `transformation_description` and `transformation_type` mirror the deprecated
+// fields in the OpenLineage spec and are kept here for spec-completeness.
+type OutputFieldLineage struct {
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	InputFields []*InputField          `protobuf:"bytes,1,rep,name=input_fields,json=inputFields,proto3" json:"input_fields,omitempty"`
+	// Deprecated: Marked as deprecated in lineage/v1/lineage.proto.
+	TransformationDescription string `protobuf:"bytes,2,opt,name=transformation_description,json=transformationDescription,proto3" json:"transformation_description,omitempty"`
+	// Deprecated: Marked as deprecated in lineage/v1/lineage.proto.
+	TransformationType string `protobuf:"bytes,3,opt,name=transformation_type,json=transformationType,proto3" json:"transformation_type,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *OutputFieldLineage) Reset() {
+	*x = OutputFieldLineage{}
+	mi := &file_lineage_v1_lineage_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OutputFieldLineage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OutputFieldLineage) ProtoMessage() {}
+
+func (x *OutputFieldLineage) ProtoReflect() protoreflect.Message {
+	mi := &file_lineage_v1_lineage_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OutputFieldLineage.ProtoReflect.Descriptor instead.
+func (*OutputFieldLineage) Descriptor() ([]byte, []int) {
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *OutputFieldLineage) GetInputFields() []*InputField {
+	if x != nil {
+		return x.InputFields
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in lineage/v1/lineage.proto.
+func (x *OutputFieldLineage) GetTransformationDescription() string {
+	if x != nil {
+		return x.TransformationDescription
+	}
+	return ""
+}
+
+// Deprecated: Marked as deprecated in lineage/v1/lineage.proto.
+func (x *OutputFieldLineage) GetTransformationType() string {
+	if x != nil {
+		return x.TransformationType
+	}
+	return ""
+}
+
+// A single column-level dependency on a source dataset's field.
+type InputField struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Namespace       string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Name            string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Field           string                 `protobuf:"bytes,3,opt,name=field,proto3" json:"field,omitempty"`
+	Transformations []*FieldTransformation `protobuf:"bytes,4,rep,name=transformations,proto3" json:"transformations,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *InputField) Reset() {
+	*x = InputField{}
+	mi := &file_lineage_v1_lineage_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InputField) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InputField) ProtoMessage() {}
+
+func (x *InputField) ProtoReflect() protoreflect.Message {
+	mi := &file_lineage_v1_lineage_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InputField.ProtoReflect.Descriptor instead.
+func (*InputField) Descriptor() ([]byte, []int) {
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *InputField) GetNamespace() string {
+	if x != nil {
+		return x.Namespace
+	}
+	return ""
+}
+
+func (x *InputField) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *InputField) GetField() string {
+	if x != nil {
+		return x.Field
+	}
+	return ""
+}
+
+func (x *InputField) GetTransformations() []*FieldTransformation {
+	if x != nil {
+		return x.Transformations
+	}
+	return nil
+}
+
+// Describes the kind of transformation that connects an input field to an
+// output column.
+//
+// `type` is one of:
+//   - DIRECT   — input value flows into the output value
+//   - INDIRECT — input affects the output's row set / ordering / grouping
+//
+// `subtype` further qualifies the transformation. Common values:
+//
+//	IDENTITY, TRANSFORMATION, AGGREGATION, JOIN, GROUP_BY, FILTER, SORT,
+//	WINDOW, CONDITIONAL.
+//
+// `masking` is true for transformations that intentionally remove signal
+// from the input (hashes, redactions, regexp_replace-as-mask, etc.).
+type FieldTransformation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Subtype       string                 `protobuf:"bytes,2,opt,name=subtype,proto3" json:"subtype,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Masking       bool                   `protobuf:"varint,4,opt,name=masking,proto3" json:"masking,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FieldTransformation) Reset() {
+	*x = FieldTransformation{}
+	mi := &file_lineage_v1_lineage_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FieldTransformation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FieldTransformation) ProtoMessage() {}
+
+func (x *FieldTransformation) ProtoReflect() protoreflect.Message {
+	mi := &file_lineage_v1_lineage_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FieldTransformation.ProtoReflect.Descriptor instead.
+func (*FieldTransformation) Descriptor() ([]byte, []int) {
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *FieldTransformation) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *FieldTransformation) GetSubtype() string {
+	if x != nil {
+		return x.Subtype
+	}
+	return ""
+}
+
+func (x *FieldTransformation) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *FieldTransformation) GetMasking() bool {
+	if x != nil {
+		return x.Masking
+	}
+	return false
+}
+
 type IngestEventRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Event         *RunEvent              `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
@@ -715,7 +1021,7 @@ type IngestEventRequest struct {
 
 func (x *IngestEventRequest) Reset() {
 	*x = IngestEventRequest{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[9]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -727,7 +1033,7 @@ func (x *IngestEventRequest) String() string {
 func (*IngestEventRequest) ProtoMessage() {}
 
 func (x *IngestEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[9]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -740,7 +1046,7 @@ func (x *IngestEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestEventRequest.ProtoReflect.Descriptor instead.
 func (*IngestEventRequest) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{9}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *IngestEventRequest) GetEvent() *RunEvent {
@@ -759,7 +1065,7 @@ type IngestEventResponse struct {
 
 func (x *IngestEventResponse) Reset() {
 	*x = IngestEventResponse{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[10]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -771,7 +1077,7 @@ func (x *IngestEventResponse) String() string {
 func (*IngestEventResponse) ProtoMessage() {}
 
 func (x *IngestEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[10]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -784,7 +1090,7 @@ func (x *IngestEventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestEventResponse.ProtoReflect.Descriptor instead.
 func (*IngestEventResponse) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{10}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *IngestEventResponse) GetStatus() string {
@@ -803,7 +1109,7 @@ type IngestBatchRequest struct {
 
 func (x *IngestBatchRequest) Reset() {
 	*x = IngestBatchRequest{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[11]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -815,7 +1121,7 @@ func (x *IngestBatchRequest) String() string {
 func (*IngestBatchRequest) ProtoMessage() {}
 
 func (x *IngestBatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[11]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -828,7 +1134,7 @@ func (x *IngestBatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestBatchRequest.ProtoReflect.Descriptor instead.
 func (*IngestBatchRequest) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{11}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *IngestBatchRequest) GetEvents() []*RunEvent {
@@ -847,7 +1153,7 @@ type IngestBatchResponse struct {
 
 func (x *IngestBatchResponse) Reset() {
 	*x = IngestBatchResponse{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[12]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -859,7 +1165,7 @@ func (x *IngestBatchResponse) String() string {
 func (*IngestBatchResponse) ProtoMessage() {}
 
 func (x *IngestBatchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[12]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,7 +1178,7 @@ func (x *IngestBatchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestBatchResponse.ProtoReflect.Descriptor instead.
 func (*IngestBatchResponse) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{12}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *IngestBatchResponse) GetIngested() int32 {
@@ -891,7 +1197,7 @@ type IngestOpenLineageBatchRequest struct {
 
 func (x *IngestOpenLineageBatchRequest) Reset() {
 	*x = IngestOpenLineageBatchRequest{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[13]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -903,7 +1209,7 @@ func (x *IngestOpenLineageBatchRequest) String() string {
 func (*IngestOpenLineageBatchRequest) ProtoMessage() {}
 
 func (x *IngestOpenLineageBatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[13]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -916,7 +1222,7 @@ func (x *IngestOpenLineageBatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestOpenLineageBatchRequest.ProtoReflect.Descriptor instead.
 func (*IngestOpenLineageBatchRequest) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{13}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *IngestOpenLineageBatchRequest) GetEvents() []*OpenLineageEvent {
@@ -937,7 +1243,7 @@ type IngestOpenLineageBatchResponse struct {
 
 func (x *IngestOpenLineageBatchResponse) Reset() {
 	*x = IngestOpenLineageBatchResponse{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[14]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -949,7 +1255,7 @@ func (x *IngestOpenLineageBatchResponse) String() string {
 func (*IngestOpenLineageBatchResponse) ProtoMessage() {}
 
 func (x *IngestOpenLineageBatchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[14]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -962,7 +1268,7 @@ func (x *IngestOpenLineageBatchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestOpenLineageBatchResponse.ProtoReflect.Descriptor instead.
 func (*IngestOpenLineageBatchResponse) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{14}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *IngestOpenLineageBatchResponse) GetStatus() string {
@@ -999,7 +1305,7 @@ type BatchSummary struct {
 
 func (x *BatchSummary) Reset() {
 	*x = BatchSummary{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[15]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1011,7 +1317,7 @@ func (x *BatchSummary) String() string {
 func (*BatchSummary) ProtoMessage() {}
 
 func (x *BatchSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[15]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1024,7 +1330,7 @@ func (x *BatchSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchSummary.ProtoReflect.Descriptor instead.
 func (*BatchSummary) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{15}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *BatchSummary) GetReceived() int32 {
@@ -1073,7 +1379,7 @@ type FailedEvent struct {
 
 func (x *FailedEvent) Reset() {
 	*x = FailedEvent{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[16]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1085,7 +1391,7 @@ func (x *FailedEvent) String() string {
 func (*FailedEvent) ProtoMessage() {}
 
 func (x *FailedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[16]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1098,7 +1404,7 @@ func (x *FailedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FailedEvent.ProtoReflect.Descriptor instead.
 func (*FailedEvent) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{16}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *FailedEvent) GetIndex() int32 {
@@ -1133,7 +1439,7 @@ type QueryLineageRequest struct {
 
 func (x *QueryLineageRequest) Reset() {
 	*x = QueryLineageRequest{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[17]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1145,7 +1451,7 @@ func (x *QueryLineageRequest) String() string {
 func (*QueryLineageRequest) ProtoMessage() {}
 
 func (x *QueryLineageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[17]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1158,7 +1464,7 @@ func (x *QueryLineageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryLineageRequest.ProtoReflect.Descriptor instead.
 func (*QueryLineageRequest) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{17}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *QueryLineageRequest) GetJobNamespace() string {
@@ -1194,7 +1500,7 @@ type LineageNode struct {
 
 func (x *LineageNode) Reset() {
 	*x = LineageNode{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[18]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1206,7 +1512,7 @@ func (x *LineageNode) String() string {
 func (*LineageNode) ProtoMessage() {}
 
 func (x *LineageNode) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[18]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1219,7 +1525,7 @@ func (x *LineageNode) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LineageNode.ProtoReflect.Descriptor instead.
 func (*LineageNode) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{18}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *LineageNode) GetNodeType() string {
@@ -1263,7 +1569,7 @@ type LineageEdge struct {
 
 func (x *LineageEdge) Reset() {
 	*x = LineageEdge{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[19]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1275,7 +1581,7 @@ func (x *LineageEdge) String() string {
 func (*LineageEdge) ProtoMessage() {}
 
 func (x *LineageEdge) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[19]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1288,7 +1594,7 @@ func (x *LineageEdge) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LineageEdge.ProtoReflect.Descriptor instead.
 func (*LineageEdge) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{19}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *LineageEdge) GetSourceNamespace() string {
@@ -1335,7 +1641,7 @@ type QueryLineageResponse struct {
 
 func (x *QueryLineageResponse) Reset() {
 	*x = QueryLineageResponse{}
-	mi := &file_lineage_v1_lineage_proto_msgTypes[20]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1347,7 +1653,7 @@ func (x *QueryLineageResponse) String() string {
 func (*QueryLineageResponse) ProtoMessage() {}
 
 func (x *QueryLineageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lineage_v1_lineage_proto_msgTypes[20]
+	mi := &file_lineage_v1_lineage_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1360,7 +1666,7 @@ func (x *QueryLineageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryLineageResponse.ProtoReflect.Descriptor instead.
 func (*QueryLineageResponse) Descriptor() ([]byte, []int) {
-	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{20}
+	return file_lineage_v1_lineage_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *QueryLineageResponse) GetNodes() []*LineageNode {
@@ -1406,11 +1712,12 @@ const file_lineage_v1_lineage_proto_rawDesc = "" +
 	"\n" +
 	"schema_url\x18\x03 \x01(\tR\tschemaUrl\x123\n" +
 	"\adataset\x18\x04 \x01(\v2\x19.lineage.v1.StaticDatasetR\adataset\x12\x19\n" +
-	"\braw_json\x18\x05 \x01(\tR\arawJson\"r\n" +
+	"\braw_json\x18\x05 \x01(\tR\arawJson\"\xc0\x01\n" +
 	"\rStaticDataset\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12/\n" +
-	"\x06facets\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06facets\"\xc6\x01\n" +
+	"\x06facets\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06facets\x12L\n" +
+	"\x0ecolumn_lineage\x18\x04 \x01(\v2%.lineage.v1.ColumnLineageDatasetFacetR\rcolumnLineage\"\xc6\x01\n" +
 	"\x10OpenLineageEvent\x123\n" +
 	"\trun_event\x18\x01 \x01(\v2\x14.lineage.v1.RunEventH\x00R\brunEvent\x123\n" +
 	"\tjob_event\x18\x02 \x01(\v2\x14.lineage.v1.JobEventH\x00R\bjobEvent\x12?\n" +
@@ -1422,17 +1729,40 @@ const file_lineage_v1_lineage_proto_rawDesc = "" +
 	"\x03Job\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12/\n" +
-	"\x06facets\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06facets\"\xad\x01\n" +
+	"\x06facets\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06facets\"\xfb\x01\n" +
 	"\fInputDataset\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12/\n" +
 	"\x06facets\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06facets\x12:\n" +
-	"\finput_facets\x18\x04 \x01(\v2\x17.google.protobuf.StructR\vinputFacets\"\xb0\x01\n" +
+	"\finput_facets\x18\x04 \x01(\v2\x17.google.protobuf.StructR\vinputFacets\x12L\n" +
+	"\x0ecolumn_lineage\x18\x05 \x01(\v2%.lineage.v1.ColumnLineageDatasetFacetR\rcolumnLineage\"\xfe\x01\n" +
 	"\rOutputDataset\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12/\n" +
 	"\x06facets\x18\x03 \x01(\v2\x17.google.protobuf.StructR\x06facets\x12<\n" +
-	"\routput_facets\x18\x04 \x01(\v2\x17.google.protobuf.StructR\foutputFacets\"@\n" +
+	"\routput_facets\x18\x04 \x01(\v2\x17.google.protobuf.StructR\foutputFacets\x12L\n" +
+	"\x0ecolumn_lineage\x18\x05 \x01(\v2%.lineage.v1.ColumnLineageDatasetFacetR\rcolumnLineage\"\xf3\x01\n" +
+	"\x19ColumnLineageDatasetFacet\x12I\n" +
+	"\x06fields\x18\x01 \x03(\v21.lineage.v1.ColumnLineageDatasetFacet.FieldsEntryR\x06fields\x120\n" +
+	"\adataset\x18\x02 \x03(\v2\x16.lineage.v1.InputFieldR\adataset\x1aY\n" +
+	"\vFieldsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x124\n" +
+	"\x05value\x18\x02 \x01(\v2\x1e.lineage.v1.OutputFieldLineageR\x05value:\x028\x01\"\xc7\x01\n" +
+	"\x12OutputFieldLineage\x129\n" +
+	"\finput_fields\x18\x01 \x03(\v2\x16.lineage.v1.InputFieldR\vinputFields\x12A\n" +
+	"\x1atransformation_description\x18\x02 \x01(\tB\x02\x18\x01R\x19transformationDescription\x123\n" +
+	"\x13transformation_type\x18\x03 \x01(\tB\x02\x18\x01R\x12transformationType\"\xb7\x01\n" +
+	"\n" +
+	"InputField\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1a\n" +
+	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x1c\n" +
+	"\x05field\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05field\x12I\n" +
+	"\x0ftransformations\x18\x04 \x03(\v2\x1f.lineage.v1.FieldTransformationR\x0ftransformations\"\x7f\n" +
+	"\x13FieldTransformation\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x18\n" +
+	"\asubtype\x18\x02 \x01(\tR\asubtype\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x18\n" +
+	"\amasking\x18\x04 \x01(\bR\amasking\"@\n" +
 	"\x12IngestEventRequest\x12*\n" +
 	"\x05event\x18\x01 \x01(\v2\x14.lineage.v1.RunEventR\x05event\"-\n" +
 	"\x13IngestEventResponse\x12\x16\n" +
@@ -1496,7 +1826,7 @@ func file_lineage_v1_lineage_proto_rawDescGZIP() []byte {
 	return file_lineage_v1_lineage_proto_rawDescData
 }
 
-var file_lineage_v1_lineage_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_lineage_v1_lineage_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_lineage_v1_lineage_proto_goTypes = []any{
 	(*RunEvent)(nil),                       // 0: lineage.v1.RunEvent
 	(*JobEvent)(nil),                       // 1: lineage.v1.JobEvent
@@ -1507,63 +1837,76 @@ var file_lineage_v1_lineage_proto_goTypes = []any{
 	(*Job)(nil),                            // 6: lineage.v1.Job
 	(*InputDataset)(nil),                   // 7: lineage.v1.InputDataset
 	(*OutputDataset)(nil),                  // 8: lineage.v1.OutputDataset
-	(*IngestEventRequest)(nil),             // 9: lineage.v1.IngestEventRequest
-	(*IngestEventResponse)(nil),            // 10: lineage.v1.IngestEventResponse
-	(*IngestBatchRequest)(nil),             // 11: lineage.v1.IngestBatchRequest
-	(*IngestBatchResponse)(nil),            // 12: lineage.v1.IngestBatchResponse
-	(*IngestOpenLineageBatchRequest)(nil),  // 13: lineage.v1.IngestOpenLineageBatchRequest
-	(*IngestOpenLineageBatchResponse)(nil), // 14: lineage.v1.IngestOpenLineageBatchResponse
-	(*BatchSummary)(nil),                   // 15: lineage.v1.BatchSummary
-	(*FailedEvent)(nil),                    // 16: lineage.v1.FailedEvent
-	(*QueryLineageRequest)(nil),            // 17: lineage.v1.QueryLineageRequest
-	(*LineageNode)(nil),                    // 18: lineage.v1.LineageNode
-	(*LineageEdge)(nil),                    // 19: lineage.v1.LineageEdge
-	(*QueryLineageResponse)(nil),           // 20: lineage.v1.QueryLineageResponse
-	(*timestamppb.Timestamp)(nil),          // 21: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),                // 22: google.protobuf.Struct
+	(*ColumnLineageDatasetFacet)(nil),      // 9: lineage.v1.ColumnLineageDatasetFacet
+	(*OutputFieldLineage)(nil),             // 10: lineage.v1.OutputFieldLineage
+	(*InputField)(nil),                     // 11: lineage.v1.InputField
+	(*FieldTransformation)(nil),            // 12: lineage.v1.FieldTransformation
+	(*IngestEventRequest)(nil),             // 13: lineage.v1.IngestEventRequest
+	(*IngestEventResponse)(nil),            // 14: lineage.v1.IngestEventResponse
+	(*IngestBatchRequest)(nil),             // 15: lineage.v1.IngestBatchRequest
+	(*IngestBatchResponse)(nil),            // 16: lineage.v1.IngestBatchResponse
+	(*IngestOpenLineageBatchRequest)(nil),  // 17: lineage.v1.IngestOpenLineageBatchRequest
+	(*IngestOpenLineageBatchResponse)(nil), // 18: lineage.v1.IngestOpenLineageBatchResponse
+	(*BatchSummary)(nil),                   // 19: lineage.v1.BatchSummary
+	(*FailedEvent)(nil),                    // 20: lineage.v1.FailedEvent
+	(*QueryLineageRequest)(nil),            // 21: lineage.v1.QueryLineageRequest
+	(*LineageNode)(nil),                    // 22: lineage.v1.LineageNode
+	(*LineageEdge)(nil),                    // 23: lineage.v1.LineageEdge
+	(*QueryLineageResponse)(nil),           // 24: lineage.v1.QueryLineageResponse
+	nil,                                    // 25: lineage.v1.ColumnLineageDatasetFacet.FieldsEntry
+	(*timestamppb.Timestamp)(nil),          // 26: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),                // 27: google.protobuf.Struct
 }
 var file_lineage_v1_lineage_proto_depIdxs = []int32{
-	21, // 0: lineage.v1.RunEvent.event_time:type_name -> google.protobuf.Timestamp
+	26, // 0: lineage.v1.RunEvent.event_time:type_name -> google.protobuf.Timestamp
 	5,  // 1: lineage.v1.RunEvent.run:type_name -> lineage.v1.Run
 	6,  // 2: lineage.v1.RunEvent.job:type_name -> lineage.v1.Job
 	7,  // 3: lineage.v1.RunEvent.inputs:type_name -> lineage.v1.InputDataset
 	8,  // 4: lineage.v1.RunEvent.outputs:type_name -> lineage.v1.OutputDataset
-	21, // 5: lineage.v1.JobEvent.event_time:type_name -> google.protobuf.Timestamp
+	26, // 5: lineage.v1.JobEvent.event_time:type_name -> google.protobuf.Timestamp
 	6,  // 6: lineage.v1.JobEvent.job:type_name -> lineage.v1.Job
 	7,  // 7: lineage.v1.JobEvent.inputs:type_name -> lineage.v1.InputDataset
 	8,  // 8: lineage.v1.JobEvent.outputs:type_name -> lineage.v1.OutputDataset
-	21, // 9: lineage.v1.DatasetEvent.event_time:type_name -> google.protobuf.Timestamp
+	26, // 9: lineage.v1.DatasetEvent.event_time:type_name -> google.protobuf.Timestamp
 	3,  // 10: lineage.v1.DatasetEvent.dataset:type_name -> lineage.v1.StaticDataset
-	22, // 11: lineage.v1.StaticDataset.facets:type_name -> google.protobuf.Struct
-	0,  // 12: lineage.v1.OpenLineageEvent.run_event:type_name -> lineage.v1.RunEvent
-	1,  // 13: lineage.v1.OpenLineageEvent.job_event:type_name -> lineage.v1.JobEvent
-	2,  // 14: lineage.v1.OpenLineageEvent.dataset_event:type_name -> lineage.v1.DatasetEvent
-	22, // 15: lineage.v1.Run.facets:type_name -> google.protobuf.Struct
-	22, // 16: lineage.v1.Job.facets:type_name -> google.protobuf.Struct
-	22, // 17: lineage.v1.InputDataset.facets:type_name -> google.protobuf.Struct
-	22, // 18: lineage.v1.InputDataset.input_facets:type_name -> google.protobuf.Struct
-	22, // 19: lineage.v1.OutputDataset.facets:type_name -> google.protobuf.Struct
-	22, // 20: lineage.v1.OutputDataset.output_facets:type_name -> google.protobuf.Struct
-	0,  // 21: lineage.v1.IngestEventRequest.event:type_name -> lineage.v1.RunEvent
-	0,  // 22: lineage.v1.IngestBatchRequest.events:type_name -> lineage.v1.RunEvent
-	4,  // 23: lineage.v1.IngestOpenLineageBatchRequest.events:type_name -> lineage.v1.OpenLineageEvent
-	15, // 24: lineage.v1.IngestOpenLineageBatchResponse.summary:type_name -> lineage.v1.BatchSummary
-	16, // 25: lineage.v1.IngestOpenLineageBatchResponse.failed_events:type_name -> lineage.v1.FailedEvent
-	19, // 26: lineage.v1.LineageNode.edges:type_name -> lineage.v1.LineageEdge
-	18, // 27: lineage.v1.QueryLineageResponse.nodes:type_name -> lineage.v1.LineageNode
-	9,  // 28: lineage.v1.LineageService.IngestEvent:input_type -> lineage.v1.IngestEventRequest
-	11, // 29: lineage.v1.LineageService.IngestBatch:input_type -> lineage.v1.IngestBatchRequest
-	13, // 30: lineage.v1.LineageService.IngestOpenLineageBatch:input_type -> lineage.v1.IngestOpenLineageBatchRequest
-	17, // 31: lineage.v1.LineageService.QueryLineage:input_type -> lineage.v1.QueryLineageRequest
-	10, // 32: lineage.v1.LineageService.IngestEvent:output_type -> lineage.v1.IngestEventResponse
-	12, // 33: lineage.v1.LineageService.IngestBatch:output_type -> lineage.v1.IngestBatchResponse
-	14, // 34: lineage.v1.LineageService.IngestOpenLineageBatch:output_type -> lineage.v1.IngestOpenLineageBatchResponse
-	20, // 35: lineage.v1.LineageService.QueryLineage:output_type -> lineage.v1.QueryLineageResponse
-	32, // [32:36] is the sub-list for method output_type
-	28, // [28:32] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	27, // 11: lineage.v1.StaticDataset.facets:type_name -> google.protobuf.Struct
+	9,  // 12: lineage.v1.StaticDataset.column_lineage:type_name -> lineage.v1.ColumnLineageDatasetFacet
+	0,  // 13: lineage.v1.OpenLineageEvent.run_event:type_name -> lineage.v1.RunEvent
+	1,  // 14: lineage.v1.OpenLineageEvent.job_event:type_name -> lineage.v1.JobEvent
+	2,  // 15: lineage.v1.OpenLineageEvent.dataset_event:type_name -> lineage.v1.DatasetEvent
+	27, // 16: lineage.v1.Run.facets:type_name -> google.protobuf.Struct
+	27, // 17: lineage.v1.Job.facets:type_name -> google.protobuf.Struct
+	27, // 18: lineage.v1.InputDataset.facets:type_name -> google.protobuf.Struct
+	27, // 19: lineage.v1.InputDataset.input_facets:type_name -> google.protobuf.Struct
+	9,  // 20: lineage.v1.InputDataset.column_lineage:type_name -> lineage.v1.ColumnLineageDatasetFacet
+	27, // 21: lineage.v1.OutputDataset.facets:type_name -> google.protobuf.Struct
+	27, // 22: lineage.v1.OutputDataset.output_facets:type_name -> google.protobuf.Struct
+	9,  // 23: lineage.v1.OutputDataset.column_lineage:type_name -> lineage.v1.ColumnLineageDatasetFacet
+	25, // 24: lineage.v1.ColumnLineageDatasetFacet.fields:type_name -> lineage.v1.ColumnLineageDatasetFacet.FieldsEntry
+	11, // 25: lineage.v1.ColumnLineageDatasetFacet.dataset:type_name -> lineage.v1.InputField
+	11, // 26: lineage.v1.OutputFieldLineage.input_fields:type_name -> lineage.v1.InputField
+	12, // 27: lineage.v1.InputField.transformations:type_name -> lineage.v1.FieldTransformation
+	0,  // 28: lineage.v1.IngestEventRequest.event:type_name -> lineage.v1.RunEvent
+	0,  // 29: lineage.v1.IngestBatchRequest.events:type_name -> lineage.v1.RunEvent
+	4,  // 30: lineage.v1.IngestOpenLineageBatchRequest.events:type_name -> lineage.v1.OpenLineageEvent
+	19, // 31: lineage.v1.IngestOpenLineageBatchResponse.summary:type_name -> lineage.v1.BatchSummary
+	20, // 32: lineage.v1.IngestOpenLineageBatchResponse.failed_events:type_name -> lineage.v1.FailedEvent
+	23, // 33: lineage.v1.LineageNode.edges:type_name -> lineage.v1.LineageEdge
+	22, // 34: lineage.v1.QueryLineageResponse.nodes:type_name -> lineage.v1.LineageNode
+	10, // 35: lineage.v1.ColumnLineageDatasetFacet.FieldsEntry.value:type_name -> lineage.v1.OutputFieldLineage
+	13, // 36: lineage.v1.LineageService.IngestEvent:input_type -> lineage.v1.IngestEventRequest
+	15, // 37: lineage.v1.LineageService.IngestBatch:input_type -> lineage.v1.IngestBatchRequest
+	17, // 38: lineage.v1.LineageService.IngestOpenLineageBatch:input_type -> lineage.v1.IngestOpenLineageBatchRequest
+	21, // 39: lineage.v1.LineageService.QueryLineage:input_type -> lineage.v1.QueryLineageRequest
+	14, // 40: lineage.v1.LineageService.IngestEvent:output_type -> lineage.v1.IngestEventResponse
+	16, // 41: lineage.v1.LineageService.IngestBatch:output_type -> lineage.v1.IngestBatchResponse
+	18, // 42: lineage.v1.LineageService.IngestOpenLineageBatch:output_type -> lineage.v1.IngestOpenLineageBatchResponse
+	24, // 43: lineage.v1.LineageService.QueryLineage:output_type -> lineage.v1.QueryLineageResponse
+	40, // [40:44] is the sub-list for method output_type
+	36, // [36:40] is the sub-list for method input_type
+	36, // [36:36] is the sub-list for extension type_name
+	36, // [36:36] is the sub-list for extension extendee
+	0,  // [0:36] is the sub-list for field type_name
 }
 
 func init() { file_lineage_v1_lineage_proto_init() }
@@ -1582,7 +1925,7 @@ func file_lineage_v1_lineage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lineage_v1_lineage_proto_rawDesc), len(file_lineage_v1_lineage_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

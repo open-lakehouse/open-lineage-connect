@@ -1,18 +1,68 @@
-# open-lineage-service
+# open-lineage-connect
 
-A Go service that ingests [OpenLineage](https://openlineage.io/) events via two complementary interfaces:
+End-to-end [OpenLineage](https://openlineage.io/) pipeline for an open lakehouse:
 
-- **REST API** (`POST /lineage`, `POST /lineage/batch`) -- accepts standard OpenLineage JSON directly from any producer, no protobuf tooling required.
-- **ConnectRPC** -- typed Protobuf RPCs over Connect, gRPC, or gRPC-Web for internal service-to-service communication.
+- a **Go ingest service** that accepts events over REST and ConnectRPC,
+- a **Rust table-service sidecar** that persists every event into a Delta Lake
+  table (local FS, S3, or Unity Catalog), and
+- an **Apache Spark 4 plugin** that observes SQL / DataFrame / Structured
+  Streaming jobs and emits typed `lineage.v1.RunEvent` protobufs (including
+  full column-level lineage following the OpenLineage 1-2-0 spec).
 
-Both interfaces share the same `LineageService` backend and support `RunEvent`, `JobEvent`, and `DatasetEvent` payloads.
+## Architecture
+
+```
+              ┌────────────────────┐         ┌──────────────────────┐
+              │  Spark plugin      │         │  External producers  │
+              │  (Scala 2.13)      │         │  (Airflow, dbt, …)   │
+              └──────────┬─────────┘         └─────────┬────────────┘
+                         │ ConnectRPC (proto)          │ OpenLineage JSON
+                         ▼                              ▼
+                ┌───────────────────────────────────────────────────┐
+                │  open-lineage-service (Go, :8090)                 │
+                │   • REST: POST /lineage, /lineage/batch           │
+                │   • ConnectRPC: IngestEvent / IngestBatch / …     │
+                │   • Auth (Bearer), validation, batching           │
+                └────────────────────────────┬──────────────────────┘
+                                             │ ConnectRPC
+                                             ▼
+                ┌───────────────────────────────────────────────────┐
+                │  open-lakehouse-table-service (Rust, :8091)       │
+                │   • TableWriterService.WriteEvent / WriteBatch    │
+                │   • Arrow + deltalake → Delta Lake table          │
+                │   • Local FS / S3 / Unity Catalog volumes         │
+                └────────────────────────────┬──────────────────────┘
+                                             ▼
+                                    ┌─────────────────┐
+                                    │  Delta table    │
+                                    │  (events log)   │
+                                    └─────────────────┘
+```
+
+The Go service is the network entry point. Whenever it ingests an event it
+fires a non-blocking `OnEvent` callback; the `internal/forwarder` package
+batches those callbacks and ships them to the Rust sidecar over ConnectRPC.
+The Rust sidecar converts each event into an Arrow `RecordBatch` (with a
+nullable `column_lineage_json` column for the typed
+`ColumnLineageDatasetFacet`) and appends to Delta.
+
+| Component | Language | Default port | Source dir |
+|-----------|----------|--------------|------------|
+| Ingest service | Go 1.22+ | `8090` | [`cmd/`, `internal/`](./internal) |
+| Table-service sidecar | Rust 1.88+ | `8091` | [`open-lakehouse-table-service/`](./open-lakehouse-table-service) |
+| Spark plugin | Scala 2.13 / Spark 4.x | n/a | [`spark-openlineage-plugin/`](./spark-openlineage-plugin) |
 
 ## Prerequisites
 
 - Go 1.22+
+- Rust 1.88+ (only if you build / run the table-service locally)
 - [buf](https://buf.build/docs/installation) CLI (for proto code generation)
+- Docker (for the all-in-one `docker compose` workflow)
+- sbt 1.10+ and JDK 17 (only if you build the Spark plugin)
 
-## Quick Start
+## Quick start
+
+### Run just the Go service
 
 ```bash
 # generate Go code from protos
@@ -25,6 +75,20 @@ PORT=8090 ./open-lineage-service
 # or run directly
 go run ./cmd/server
 ```
+
+### Run the full stack (Go ingest + Rust table-service + MinIO) with Docker Compose
+
+```bash
+make docker-compose-up        # builds both images, starts both services + MinIO
+curl -sf http://localhost:8090/health
+curl -sf http://localhost:8091/health
+make docker-compose-down      # tears it down and removes the Delta volume
+```
+
+`docker-compose.yaml` wires the Go service's `TABLE_SERVICE_URL` to the Rust
+sidecar so events flow through to Delta automatically. MinIO is included for
+S3-backend integration tests; see the [Rust table-service](#rust-table-service)
+section below for the storage backends supported.
 
 ## Endpoints
 
@@ -290,39 +354,136 @@ buf curl --schema . --protocol connect \
   http://0.0.0.0:8090/lineage.v1.LineageService/QueryLineage
 ```
 
+## Rust table-service
+
+The [`open-lakehouse-table-service`](./open-lakehouse-table-service) sidecar
+is the persistence half of the pipeline. It exposes a ConnectRPC service
+(`table.v1.TableWriterService`) over HTTP/1.1 with a single hot path
+(`WriteBatch`) plus a unary fallback (`WriteEvent`), and writes every event
+into a Delta Lake table.
+
+### Build / test
+
+```bash
+make rust-build           # buf export → cargo build
+make rust-test            # buf export → cargo test (8 integration tests)
+make docker-build-table   # build only the table-service Docker image
+```
+
+`make proto-export` is the prerequisite step: it runs `buf export` so that
+`connectrpc-build` in the Rust crate can compile the proto tree without
+needing `buf` at build time. `make rust-build` and `make rust-test` invoke it
+automatically.
+
+### Configuration (env vars)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TABLE_SERVICE_PORT` | `8091` | TCP port the service listens on. |
+| `DELTA_STORAGE` | `local` | One of `local`, `s3`, or `unity`. |
+| `DELTA_TABLE_PATH` | `/data/events` | Local path or `s3://bucket/prefix` URL for the Delta table. |
+| `DELTA_PARTITION_COLS` | `event_kind` | Comma-separated list of partition columns (`event_kind`, `event_type`, …). |
+| `RUST_LOG` | *(unset)* | Standard `tracing-subscriber` filter (e.g. `info`, `open_lakehouse_table_service=debug`). |
+
+S3 / Unity Catalog credentials are picked up from standard environment
+variables when `DELTA_STORAGE=s3` or `unity`:
+
+| Variable | Used by |
+|----------|---------|
+| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | `s3` backend |
+| `AWS_ENDPOINT_URL`, `AWS_S3_ALLOW_UNSAFE_RENAME` | `s3` backend (MinIO) |
+| `UNITY_CATALOG_URL`, `UNITY_CATALOG_TOKEN` | `unity` backend |
+
+### Delta schema
+
+Each event is stored as one row in the Delta table. Column lineage piggybacks
+on a nullable `column_lineage_json` column whose JSON shape mirrors the
+OpenLineage 1-2-0 `ColumnLineageDatasetFacet` so downstream consumers can
+read it without re-deriving the schema.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `event_kind` | `STRING NOT NULL` | `run` \| `job` \| `dataset` |
+| `event_type` | `STRING` | RunEvent: `START` / `RUNNING` / `COMPLETE` / `FAIL` / `ABORT` / `OTHER`; null for job/dataset events. |
+| `event_time` | `TIMESTAMP(UTC) NOT NULL` | Microsecond precision. |
+| `producer` | `STRING NOT NULL` | OpenLineage `producer` URI. |
+| `schema_url` | `STRING` | OpenLineage `schemaURL`. |
+| `run_id`, `job_namespace`, `job_name` | `STRING` | Set on RunEvents and JobEvents respectively. |
+| `dataset_namespace`, `dataset_name` | `STRING` | Set on DatasetEvents. |
+| `facets_json`, `inputs_json`, `outputs_json` | `STRING` | JSON copies of the typed facet/dataset arrays. |
+| `column_lineage_json` | `STRING` | Per-event JSON of every input/output's typed `ColumnLineageDatasetFacet`. Null when no dataset on the event carries column lineage. |
+| `raw_json` | `STRING` | Original event JSON when the producer was the REST endpoint, otherwise null. |
+
+The default partition column is `event_kind`, which keeps run/job/dataset
+streams cleanly separated on disk; override with `DELTA_PARTITION_COLS`.
+
 ## Testing
 
 ```bash
-# run tests with coverage
+# Go: run tests with coverage
 make coverage
+
+# Rust: 8 integration tests (Arrow conversion + Delta round-trip + JSON fixture)
+make rust-test
+
+# Spark plugin: 100 tests across 16 suites (sbt + JDK 17 required)
+make spark-plugin-test
 ```
 
-Tests exercise every RPC over both binary Protobuf and JSON transports, the REST ingestion endpoints with all three event types, batch partial-failure handling, and auth scenarios.
+Go tests exercise every RPC over both binary Protobuf and JSON transports,
+the REST ingestion endpoints with all three event types, batch
+partial-failure handling, auth scenarios, and the Go → Rust forwarder.
 
 ## Project Layout
 
 ```
-proto/lineage/v1/lineage.proto     # service + message definitions
-gen/                               # buf-generated Go code
-cmd/server/main.go                 # server entrypoint
-internal/ingest/converter.go       # OpenLineage JSON -> proto conversion
-internal/ingest/handler.go         # REST ingestion handler (POST /lineage, /lineage/batch)
-internal/interceptor/auth.go       # authorization interceptor
-internal/interceptor/validate.go   # protovalidate interceptor
-internal/service/lineage.go        # in-memory service implementation
-resources/specs/openapi.json       # OpenLineage OpenAPI specification
-resources/examples/                # example JSON payloads for each event type
+proto/                                      # protobuf source of truth
+  lineage/v1/lineage.proto                  # OpenLineage event + service definitions
+  table/v1/table_writer.proto               # Rust table-service writer RPCs
+gen/                                        # buf-generated Go code
+
+cmd/server/main.go                          # Go server entrypoint
+internal/ingest/converter.go                # OpenLineage JSON → proto conversion
+internal/ingest/handler.go                  # REST ingestion (POST /lineage, /lineage/batch)
+internal/interceptor/auth.go                # Bearer-token authorization interceptor
+internal/interceptor/validate.go            # protovalidate interceptor
+internal/service/lineage.go                 # in-memory service implementation
+internal/forwarder/forwarder.go             # async batched Go → Rust forwarder
+
+open-lakehouse-table-service/               # Rust sidecar (Cargo crate)
+  src/main.rs                               # axum + ConnectRPC bootstrap
+  src/service.rs                            # TableWriterService impl
+  src/writer/schema.rs                      # Arrow schema + per-event serialization
+  src/writer/delta.rs                       # deltalake writer wrapper
+  src/config.rs                             # env-var configuration
+  build.rs                                  # connectrpc-build (consumes proto-export/)
+  tests/integration_test.rs                 # Delta round-trip + column-lineage fixture
+  Dockerfile
+
+spark-openlineage-plugin/                   # Spark 4 plugin (Scala 2.13)
+  src/main/scala/com/openlakehouse/lineage/ # driver + executor + streaming + transport
+  src/test/scala/...                        # 100 unit + integration tests
+  README.md, COMPAT.md                      # quickstart + Catalyst API surface
+
+ecs/task-definition.json                    # Fargate template (both services as one task)
+docker-compose.yaml                         # Go + Rust + MinIO local stack
+resources/examples/                         # example JSON payloads (incl. column-lineage)
+resources/specs/openapi.json                # OpenLineage OpenAPI specification
+research/                                   # design docs (Spark architecture, lineage extraction)
 ```
 
 ## Makefile Targets
 
 | Target | Description |
 |--------|-------------|
-| `generate` | Run `buf generate` |
-| `build` | `go build ./...` |
-| `test` | Run tests with coverage profile |
-| `coverage` | Print per-function coverage |
-| `lint` | Run `buf lint` |
-| `docker-build` | Build Docker image |
-| `docker-run` | Build and run in Docker |
-| `clean` | Remove generated code and coverage files |
+| `generate` | Run `buf generate` (regenerates Go + Java protos). |
+| `proto-export` | `buf export` the proto tree into `open-lakehouse-table-service/proto-export` (consumed by Rust at build time). |
+| `build` | `go build ./...`. |
+| `test` / `coverage` | Run Go tests with coverage profile / print per-function coverage. |
+| `lint` | Run `buf lint`. |
+| `rust-build` / `rust-test` | Build / test the Rust table-service (auto-runs `proto-export`). |
+| `spark-plugin-build` / `spark-plugin-test` / `spark-plugin-clean` | Build / test / clean the Spark plugin via sbt. |
+| `docker-build` / `docker-run` | Build / run the Go service Docker image. |
+| `docker-build-table` | Build the Rust table-service Docker image. |
+| `docker-compose-up` / `docker-compose-down` | Start / stop the full local stack (Go + Rust + MinIO). |
+| `clean` | Remove `gen/`, `coverage.out`, `proto-export/`, and run `sbt clean`. |

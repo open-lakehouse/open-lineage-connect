@@ -27,7 +27,8 @@ final case class RunContext(
     executionId: Option[Long],
     errorMessage: Option[String],
     errorClass: Option[String],
-    facets: Map[String, String]
+    facets: Map[String, String],
+    columnLineage: Map[(String, String), ColumnLineageFacet] = Map.empty
 ) {
 
   def withStatus(newStatus: RunStatus, now: Instant = Instant.now()): RunContext =
@@ -46,6 +47,14 @@ final case class RunContext(
 
   def withOutputs(refs: Seq[DatasetRef]): RunContext =
     copy(outputs = DatasetRef.distinctByIdentity(refs))
+
+  /**
+   * Attach a per-dataset column-lineage facet map (keyed by `(namespace, name)`).
+   * The map is keyed by output dataset identity so the builder can look up
+   * each output's lineage when assembling the wire message.
+   */
+  def withColumnLineage(map: Map[(String, String), ColumnLineageFacet]): RunContext =
+    copy(columnLineage = map)
 
   def withFacet(key: String, value: String): RunContext =
     copy(facets = facets + (key -> value))
