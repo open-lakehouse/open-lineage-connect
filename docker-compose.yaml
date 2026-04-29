@@ -16,6 +16,8 @@ services:
     build:
       context: .
       dockerfile: open-lakehouse-table-service/Dockerfile
+      args:
+        CRATES_PROXY: ${CRATES_PROXY:-}
     ports:
       - "8091:8091"
     environment:

@@ -49,14 +49,25 @@ object QueryPlanVisitor {
    * `(namespace, name)`.
    */
   def extractSources(plan: LogicalPlan): Seq[DatasetRef] = {
-    val collected = plan.collect {
+    val direct = plan.collect {
       case l: LogicalRelation          => fromLogicalRelation(l)
       case h: HiveTableRelation        => Some(fromHiveTableRelation(h))
       case v: DataSourceV2Relation     => Some(fromV2Relation(v))
       case s: DataSourceV2ScanRelation => Some(fromV2Relation(s.relation))
       case u: UnresolvedRelation       => fromUnresolvedRelation(u)
     }.flatten
-    DatasetRef.distinctByIdentity(collected)
+
+    // Some write commands in analyzed plans do not expose their source scans as
+    // direct children. Pull from embedded query plans when available.
+    val nestedFromWrites = plan.collect {
+      case c: InsertIntoHadoopFsRelationCommand    => extractSources(c.query)
+      case c: SaveIntoDataSourceCommand            => extractSources(c.query)
+      case c: CreateDataSourceTableAsSelectCommand => extractSources(c.query)
+      case c: CreateTableAsSelect                  => extractSources(c.query)
+      case c: ReplaceTableAsSelect                 => extractSources(c.query)
+    }.flatten
+
+    DatasetRef.distinctByIdentity(direct ++ nestedFromWrites)
   }
 
   /**

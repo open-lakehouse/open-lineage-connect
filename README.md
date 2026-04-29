@@ -59,6 +59,8 @@ nullable `column_lineage_json` column for the typed
 - [buf](https://buf.build/docs/installation) CLI (for proto code generation)
 - Docker (for the all-in-one `docker compose` workflow)
 - sbt 1.10+ and JDK 17 (only if you build the Spark plugin)
+- [just](https://github.com/casey/just) (for scripted demo orchestration)
+- Spark 4.x with `spark-submit` on `PATH` (for the E2E Spark demo)
 
 ## Quick start
 
@@ -90,6 +92,44 @@ sidecar so events flow through to Delta automatically. MinIO is included for
 S3-backend integration tests; see the [Rust table-service](#rust-table-service)
 section below for the storage backends supported.
 
+If your environment requires a Cargo mirror/proxy for Rust dependency downloads,
+set `CRATES_PROXY` in a local `.env` file (Docker Compose reads it automatically):
+
+```bash
+cp .env.example .env
+# then set CRATES_PROXY from ~/.cargo/config.toml
+```
+
+`CRATES_PROXY` accepts either `https://...` or `sparse+https://...`.
+You can also set `SPARK_HOME` in `.env`; `just run-e2e-demo` uses
+`$SPARK_HOME/bin/spark-submit` when present.
+If Maven Central is blocked, set `SPARK_MAVEN_REPOSITORIES` in `.env` and the
+demo will pass it through to `spark-submit --repositories`.
+If ConnectRPC auth is enabled on the Go service, set
+`OPENLINEAGE_AUTH_TOKEN` (defaults to `valid-token` in the local demo template).
+
+### Run the E2E Spark demo with Just
+
+`just run-e2e-demo` spins up the stack, runs a Spark job that joins the demo
+`orders` and `users` Delta tables, and then copies lineage table artifacts into
+`demo/results`.
+
+```bash
+# default output=deltalake
+just run-e2e-demo
+
+# explicit deltalake output
+just run-e2e-demo output=deltalake
+
+# reserved for a follow-up PR (exits non-zero)
+just run-e2e-demo output=iceberg
+```
+
+Expected artifacts after a successful Delta run:
+
+- `demo/results/deltalake/spark-output/user_orders` (joined output Delta table)
+- `demo/results/deltalake/lineage-events` (lineage events table files copied from `table-service:/data/events`)
+
 ## Endpoints
 
 ### REST (OpenLineage-native JSON)
@@ -100,6 +140,7 @@ These endpoints accept the standard [OpenLineage spec](https://openlineage.io/sp
 |--------|------|-------------|
 | `POST` | `/lineage` | Ingest a single RunEvent, JobEvent, or DatasetEvent |
 | `POST` | `/lineage/batch` | Ingest a JSON array of mixed event types |
+| `GET`  | `/health` | Service readiness check (returns `200` only when dependencies are ready; when `TABLE_SERVICE_URL` is set this includes sidecar `/health`) |
 
 ### ConnectRPC
 

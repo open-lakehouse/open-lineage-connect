@@ -36,6 +36,10 @@ func (s *LineageService) OnEvent(cb EventCallback) {
 // StoreEvent appends a single OpenLineageEvent to the in-memory store.
 // This is the direct method used by the REST ingestion adapter.
 func (s *LineageService) StoreEvent(event *lineagev1.OpenLineageEvent) {
+	s.storeOpenLineageEvent(event)
+}
+
+func (s *LineageService) storeOpenLineageEvent(event *lineagev1.OpenLineageEvent) {
 	s.mu.Lock()
 	s.events = append(s.events, event)
 	cbs := make([]EventCallback, len(s.callbacks))
@@ -90,14 +94,12 @@ func (s *LineageService) IngestBatch(
 	_ context.Context,
 	req *connect.Request[lineagev1.IngestBatchRequest],
 ) (*connect.Response[lineagev1.IngestBatchResponse], error) {
-	s.mu.Lock()
 	for _, e := range req.Msg.Events {
-		s.events = append(s.events, &lineagev1.OpenLineageEvent{
+		s.storeOpenLineageEvent(&lineagev1.OpenLineageEvent{
 			Event: &lineagev1.OpenLineageEvent_RunEvent{RunEvent: e},
 		})
 	}
 	count := int32(len(req.Msg.Events))
-	s.mu.Unlock()
 
 	return connect.NewResponse(&lineagev1.IngestBatchResponse{
 		Ingested: count,
@@ -108,10 +110,10 @@ func (s *LineageService) IngestOpenLineageBatch(
 	_ context.Context,
 	req *connect.Request[lineagev1.IngestOpenLineageBatchRequest],
 ) (*connect.Response[lineagev1.IngestOpenLineageBatchResponse], error) {
-	s.mu.Lock()
-	s.events = append(s.events, req.Msg.Events...)
 	received := int32(len(req.Msg.Events))
-	s.mu.Unlock()
+	for _, evt := range req.Msg.Events {
+		s.storeOpenLineageEvent(evt)
+	}
 
 	return connect.NewResponse(&lineagev1.IngestOpenLineageBatchResponse{
 		Status: "success",

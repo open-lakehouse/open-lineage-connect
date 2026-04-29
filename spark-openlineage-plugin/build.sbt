@@ -4,7 +4,7 @@ ThisBuild / organization := "com.openlakehouse"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
 
 // Spark 4.x is Scala 2.13 only — no cross-build.
-ThisBuild / scalaVersion := "2.13.14"
+ThisBuild / scalaVersion := "2.13.17"
 
 // Spark 4 requires JDK 17 minimum.
 ThisBuild / javacOptions  ++= Seq("-source", "17", "-target", "17")
@@ -22,7 +22,7 @@ ThisBuild / scalacOptions ++= Seq(
 // Spark 4.1.x patch level. Bump deliberately and re-run the API audit
 // (see .cursor/plans/spark_openlineage_plugin_*.plan.md — todo `spark4-api-audit`).
 val sparkVersion          = "4.1.1"
-val deltaVersion          = "4.0.0"     // delta-spark built for Spark 4.x (Scala 2.13)
+val deltaVersion          = "4.2.0"     // delta-spark built for Spark 4.x (Scala 2.13)
 val connectKotlinVersion  = "0.7.2"     // connect-kotlin-okhttp (Java-callable from Scala)
 // Generated Java proto classes from buf.build/protocolbuffers/java use the
 // protobuf-java 4.x "GeneratedFile" runtime API (RuntimeVersion validation).
@@ -53,6 +53,9 @@ lazy val root = (project in file("."))
       // Only needed if the plugin is loaded inside a spark-connect-server JVM;
       // the server distribution already carries it so keep it provided.
       "org.apache.spark"    %% "spark-connect"   % sparkVersion % Provided,
+      // Needed at runtime for Delta table source/sink handling in demo and
+      // plugin execution (not test-only).
+      "io.delta"            %% "delta-spark"     % deltaVersion,
 
       "com.google.protobuf"  % "protobuf-java"    % protobufVersion,
       // Provides build.buf.validate.* referenced by the generated Lineage.java
@@ -72,7 +75,6 @@ lazy val root = (project in file("."))
       "org.scalatest"        %% "scalatest"            % scalatestVersion % Test,
       "org.apache.spark"     %% "spark-core"           % sparkVersion     % Test classifier "tests",
       "org.apache.spark"     %% "spark-sql"            % sparkVersion     % Test classifier "tests",
-      "io.delta"             %% "delta-spark"          % deltaVersion     % Test,
       // MockWebServer gives us a real local HTTP server in tests so we exercise
       // the full Connect wire format (headers + proto body) without mocking OkHttp.
       "com.squareup.okhttp3" % "mockwebserver"         % okhttpVersion    % Test

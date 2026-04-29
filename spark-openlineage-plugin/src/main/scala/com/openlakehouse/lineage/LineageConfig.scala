@@ -12,6 +12,7 @@ import org.apache.spark.SparkConf
 final case class LineageConfig(
     serviceUrl: Option[String],
     namespace: String,
+    authToken: Option[String],
     jobNameOverride: Option[String],
     emitTaskMetrics: Boolean,
     emitColumnLineage: Boolean,
@@ -26,6 +27,7 @@ object LineageConfig {
 
   val ServiceUrlKey                = "spark.openlineage.serviceUrl"
   val NamespaceKey                 = "spark.openlineage.namespace"
+  val AuthTokenKey                 = "spark.openlineage.authToken"
   val JobNameKey                   = "spark.openlineage.jobName"
   val EmitTaskMetricsKey           = "spark.openlineage.emit.taskMetrics"
   val EmitColumnLineageKey         = "spark.openlineage.emit.columnLineage"
@@ -38,6 +40,7 @@ object LineageConfig {
   def fromSparkConf(conf: SparkConf): LineageConfig = LineageConfig(
     serviceUrl              = Option(conf.get(ServiceUrlKey, null)).filter(_.nonEmpty),
     namespace               = conf.get(NamespaceKey, "default"),
+    authToken               = Option(conf.get(AuthTokenKey, null)).filter(_.nonEmpty),
     jobNameOverride         = Option(conf.get(JobNameKey, null)).filter(_.nonEmpty),
     emitTaskMetrics         = conf.getBoolean(EmitTaskMetricsKey, defaultValue = true),
     emitColumnLineage       = conf.getBoolean(EmitColumnLineageKey, defaultValue = false),

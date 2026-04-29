@@ -256,6 +256,28 @@ func TestIngestBatch_Empty(t *testing.T) {
 	}
 }
 
+func TestIngestBatch_InvokesOnEventCallbacks(t *testing.T) {
+	svc := service.NewLineageService()
+	var callbackCount int
+	svc.OnEvent(func(*lineagev1.OpenLineageEvent) {
+		callbackCount++
+	})
+
+	now := timestamppb.Now()
+	_, err := svc.IngestBatch(context.Background(), connect.NewRequest(&lineagev1.IngestBatchRequest{
+		Events: []*lineagev1.RunEvent{
+			{EventType: "START", EventTime: now, Producer: "a"},
+			{EventType: "COMPLETE", EventTime: now, Producer: "b"},
+		},
+	}))
+	if err != nil {
+		t.Fatalf("IngestBatch failed: %v", err)
+	}
+	if callbackCount != 2 {
+		t.Fatalf("callbackCount=%d want=2", callbackCount)
+	}
+}
+
 func TestIngestBatch_AuthFailure(t *testing.T) {
 	env := newTestEnv(t)
 
@@ -637,5 +659,35 @@ func TestIngestOpenLineageBatch_Empty(t *testing.T) {
 				t.Errorf("received = %d, want 0", resp.Msg.Summary.Received)
 			}
 		})
+	}
+}
+
+func TestIngestOpenLineageBatch_InvokesOnEventCallbacks(t *testing.T) {
+	svc := service.NewLineageService()
+	var callbackCount int
+	svc.OnEvent(func(*lineagev1.OpenLineageEvent) {
+		callbackCount++
+	})
+
+	now := timestamppb.Now()
+	_, err := svc.IngestOpenLineageBatch(context.Background(), connect.NewRequest(&lineagev1.IngestOpenLineageBatchRequest{
+		Events: []*lineagev1.OpenLineageEvent{
+			{
+				Event: &lineagev1.OpenLineageEvent_RunEvent{
+					RunEvent: &lineagev1.RunEvent{EventType: "START", EventTime: now, Producer: "a"},
+				},
+			},
+			{
+				Event: &lineagev1.OpenLineageEvent_JobEvent{
+					JobEvent: &lineagev1.JobEvent{EventTime: now, Producer: "b", Job: &lineagev1.Job{Namespace: "ns", Name: "j"}},
+				},
+			},
+		},
+	}))
+	if err != nil {
+		t.Fatalf("IngestOpenLineageBatch failed: %v", err)
+	}
+	if callbackCount != 2 {
+		t.Fatalf("callbackCount=%d want=2", callbackCount)
 	}
 }
