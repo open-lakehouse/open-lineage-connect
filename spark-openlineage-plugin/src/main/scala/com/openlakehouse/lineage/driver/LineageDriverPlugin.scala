@@ -86,7 +86,13 @@ final class LineageDriverPlugin extends DriverPlugin with Logging {
   protected def buildSink(config: LineageConfig): EventSink = config.serviceUrl match {
     case None => EventSink.Noop
     case Some(url) =>
-      val transport = new ConnectRpcClient(baseUrl = url, okHttp = ConnectRpcClient.defaultOkHttp())
+      val token = config.authToken.getOrElse("valid-token")
+      val extraHeaders = Map("Authorization" -> s"Bearer $token")
+      val transport = new ConnectRpcClient(
+        baseUrl = url,
+        okHttp = ConnectRpcClient.defaultOkHttp(),
+        extraHeaders = extraHeaders
+      )
       val svc       = new LineageServiceClient(transport)
       new ConnectRpcEventSink(
         client         = svc,

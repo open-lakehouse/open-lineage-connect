@@ -71,9 +71,10 @@ private[lineage] final class LineageQueryListener(
           safeExtractColumnLineage(plan)
         else Map.empty[(String, String), ColumnLineageFacet]
 
+      val inputRefs = extractInputRefs(qe, plan)
       val startCtx = RunContext
         .start(job, now = clock(), executionId = executionId, facets = baseFacets.result())
-        .withInputs(safeExtract(QueryPlanVisitor.extractSources(plan), "sources"))
+        .withInputs(inputRefs)
         .withOutputs(safeExtract(QueryPlanVisitor.extractSinks(plan), "sinks"))
         .withColumnLineage(columnLineage)
 
@@ -107,6 +108,24 @@ private[lineage] final class LineageQueryListener(
         logWarning(s"OpenLineage $label extraction failed; continuing with empty list", t)
         Seq.empty
     }
+  }
+
+  /**
+   * On Spark write commands, `qe.analyzed` sometimes contains a resolved sink
+   * node but omits source scans. Fall back to logical/optimized plans when
+   * analyzed-plan source extraction is empty so inputs remain visible.
+   */
+  private def extractInputRefs(
+      qe: QueryExecution,
+      analyzedPlan: org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+  ): Seq[DatasetRef] = {
+    val analyzed = safeExtract(QueryPlanVisitor.extractSources(analyzedPlan), "sources(analyzed)")
+    if (analyzed.nonEmpty) return analyzed
+
+    val logical = safeExtract(QueryPlanVisitor.extractSources(qe.logical), "sources(logical)")
+    if (logical.nonEmpty) return logical
+
+    safeExtract(QueryPlanVisitor.extractSources(qe.optimizedPlan), "sources(optimized)")
   }
 
   private def safeExtractColumnLineage(

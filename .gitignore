@@ -60,3 +60,7 @@ spark-openlineage-plugin/project/metals.sbt
 .bsp/
 .vscode/
 
+# Local Spark SQL warehouse / Derby artifacts
+metastore_db/
+derby.log
+

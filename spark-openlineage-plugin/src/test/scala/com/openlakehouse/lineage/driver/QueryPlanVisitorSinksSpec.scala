@@ -167,14 +167,37 @@ final class QueryPlanVisitorSinksSpec
     }
   }
 
+  test("write analyzed plan still exposes read sources via embedded query") {
+    val ss = spark; import ss.implicits._
+    val srcA = tmpDir.resolve("src-a.parquet").toString
+    val srcB = tmpDir.resolve("src-b.parquet").toString
+    val dst = tmpDir.resolve("joined-out.parquet").toString
+    Seq((1, "a1"), (2, "a2")).toDF("id", "va").write.mode("overwrite").parquet(srcA)
+    Seq((1, "b1"), (2, "b2")).toDF("id", "vb").write.mode("overwrite").parquet(srcB)
+
+    withListener { l =>
+      spark.read.parquet(srcA).join(spark.read.parquet(srcB), "id").write.mode("overwrite").parquet(dst)
+
+      val planWithSink = firstPlanWithSinks(l)
+      val sources = QueryPlanVisitor.extractSources(planWithSink)
+
+      sources should have size 2
+      val names = sources.map(_.name)
+      names.exists(_.contains(srcA)) shouldBe true
+      names.exists(_.contains(srcB)) shouldBe true
+    }
+  }
+
   /**
    * Walk captured plans newest-first and return the first non-empty extractSinks
    * result. Spark emits multiple plans per write (incl. empty rewrites); the
    * final/analyzed one usually carries the sink.
    */
   private def firstNonEmptySinks(l: CapturingListener): Seq[DatasetRef] =
+    QueryPlanVisitor.extractSinks(firstPlanWithSinks(l))
+
+  private def firstPlanWithSinks(l: CapturingListener): org.apache.spark.sql.catalyst.plans.logical.LogicalPlan =
     l.captured.reverseIterator
-      .map(QueryPlanVisitor.extractSinks)
-      .collectFirst { case refs if refs.nonEmpty => refs }
-      .getOrElse(Seq.empty)
+      .find(p => QueryPlanVisitor.extractSinks(p).nonEmpty)
+      .getOrElse(l.latest)
 }
