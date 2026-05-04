@@ -25,14 +25,27 @@ Lessons learned and context for AI agents working in this repo.
 
 - The `Dockerfile` uses a two-stage build: `golang:1.24-alpine` for compilation, `alpine:3.21` for the runtime image. The binary is statically linked (`CGO_ENABLED=0`).
 - Default port is `8090`, configurable via `PORT` env var.
+- **`.dockerignore` is mandatory.** Without it, both Dockerfiles (`Dockerfile` and `open-lakehouse-table-service/Dockerfile`) `COPY . .` from the repo root and pull in `open-lakehouse-table-service/target/` (~9 GB of Rust artifacts), the Spark plugin's sbt target (~100 MB), `.git/`, `demo/results/`, etc. — yielding a 10 GB+ build context that routinely fills the Docker daemon's disk and corrupts BuildKit's containerd metadata store. Symptom: `failed to solve: write /var/lib/containerd/io.containerd.metadata.v1.bolt/meta.db: input/output error`. Recovery: `just docker-recover` (followed by a Docker Desktop / Colima restart if I/O errors persist).
 
 ## Rust Sidecar (open-lakehouse-table-service)
 
 - The Rust table-service lives in `open-lakehouse-table-service/` as a subdirectory.
-- It uses `connectrpc` (Anthropic's connect-rust) for RPC and `deltalake` for Delta Lake writes.
+- It uses `connectrpc` (Anthropic's connect-rust) for RPC and `deltalake` for Delta Lake writes. As of the iceberg-sink work it also uses `iceberg` + `iceberg-catalog-rest` for Apache Iceberg writes via Lakekeeper.
 - Proto code generation uses `connectrpc-build` in `build.rs`, reading from `proto-export/` (a vendored copy of all protos with buf deps resolved).
 - Run `make proto-export` from the repo root before building the Rust project. This runs `buf export` to produce the self-contained proto tree.
 - `make rust-build` and `make rust-test` are the canonical build/test targets.
+- **Cargo target dir gotcha**: every shell invocation that escalates to `required_permissions: ["all"]` lands in a fresh sandbox cache (`/var/folders/.../cursor-sandbox-cache/<hash>/cargo-target`), forcing a full rebuild of the deltalake+iceberg+datafusion dep tree (~75s clean). Always export `CARGO_TARGET_DIR="$(pwd)/target"` before invoking cargo so builds stay incremental (~1–4s).
+
+## Iceberg Sink (writer/iceberg.rs)
+
+- Sinks are pluggable via the `TableSink` trait (`writer/sink.rs`). `TABLE_SINKS=delta,iceberg` fan-outs every `WriteBatch` RPC to both sinks; ordering matters and the first failure short-circuits the RPC with that sink's error prefix.
+- The Iceberg sink talks to **any** REST catalog by default — `Lakekeeper` is the project-blessed open-source choice, but Polaris / Tabular / Nessie also work. Production wiring goes through `IcebergSink::from_config(&IcebergConfig)`.
+- **Embedded tests use `iceberg::memory::MemoryCatalog`** (no Docker, no network). `tests/iceberg_integration_test.rs` carries `#[ignore]`'d tests that talk to a real Lakekeeper brought up via `just stack-up-iceberg`. Run with `just test-iceberg-integration`.
+- **Field-id gotcha**: `iceberg::arrow::arrow_schema_to_schema` requires every Arrow field to already carry `PARQUET:field_id` metadata, which our canonical `arrow_schema()` deliberately doesn't. We therefore hand-roll `iceberg_schema()` natively (via `iceberg::spec::Schema::builder`) and rebind incoming RecordBatches onto the field-id-tagged Arrow schema produced by `iceberg::arrow::schema_to_arrow_schema(iceberg_schema())` before handing them off to the writer.
+- **Timezone gotcha**: Delta uses tz string `"UTC"`; Iceberg's `Timestamptz` materializes to `"+00:00"` (per `iceberg::arrow::UTC_TIME_ZONE`). The append path runs an `arrow::compute::cast` per column to bridge the two — for tz-only changes this is a metadata edit, not a data rewrite.
+- **Partitioning v1**: `RecordBatchPartitionSplitter` in iceberg-rust 0.7 is `pub(crate)`, so we ship our own minimal fanout in `IcebergSink::split_by_partition`. Supported: single- or multi-column **identity-transform** partitions on **Utf8/string** columns (covers `event_kind`). Anything else returns a clear error at write time.
+- **File-name uniqueness**: `DefaultFileNameGenerator` only auto-uniques *within* one writer instance. Each `append` call must construct its own writer with a per-call unique `suffix` (we use unix-nanos + group-index) or the `fast_append` transaction will reject the second write with `Cannot add files that are already referenced by table`.
+- **Crate version pinning**: `iceberg = 0.7` and `iceberg-catalog-rest = 0.7` because they're the last release line that still pins `arrow/parquet 55.x`, matching what `deltalake = 0.28` pulls in. Bumping iceberg ≥0.8 also requires bumping deltalake (or vendoring an arrow-version bridge).
 
 ## Event Forwarding (Go → Rust)
 

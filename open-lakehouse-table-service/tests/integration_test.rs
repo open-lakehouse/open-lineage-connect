@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use buffa::Message;
@@ -6,7 +5,7 @@ use deltalake::arrow::array::StringArray;
 use deltalake::arrow::datatypes::DataType;
 use deltalake::DeltaTableBuilder;
 
-use open_lakehouse_table_service::config::{Config, StorageBackend};
+use open_lakehouse_table_service::config::{Config, DeltaConfig};
 use open_lakehouse_table_service::lineage::v1::{
     open_lineage_event::Event, ColumnLineageDatasetFacet, FieldTransformation, InputField, Job,
     OpenLineageEvent, OpenLineageEventView, OutputDataset, OutputFieldLineage, Run, RunEvent,
@@ -16,11 +15,11 @@ use open_lakehouse_table_service::writer::schema::{arrow_schema, events_to_recor
 
 fn local_config(path: &str) -> Config {
     Config {
-        port: 8091,
-        storage: StorageBackend::Local,
-        table_path: path.to_string(),
-        partition_cols: vec![],
-        storage_options: HashMap::new(),
+        delta: DeltaConfig {
+            table_path: path.to_string(),
+            partition_cols: vec![],
+        },
+        ..Config::default()
     }
 }
 

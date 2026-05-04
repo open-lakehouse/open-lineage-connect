@@ -1,0 +1,129 @@
+# Compose override that adds an Iceberg REST catalog (Lakekeeper) plus a
+# bootstrap one-shot to the default stack.
+#
+# Bring up the full Iceberg-on-Lakekeeper stack with:
+#
+#   docker compose \
+#     -f docker-compose.yaml \
+#     -f docker-compose.iceberg.yaml \
+#     up --build
+#
+# After everything is healthy, the table-service will fan every WriteBatch
+# RPC out to BOTH the Delta sink (mounted volume) AND the Iceberg sink
+# (Lakekeeper-managed table on MinIO). See README.md for tutorial steps.
+
+services:
+  # PostgreSQL backing the Lakekeeper catalog metadata.
+  lakekeeper-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lakekeeper
+      POSTGRES_PASSWORD: lakekeeper
+      POSTGRES_DB: lakekeeper
+    volumes:
+      - lakekeeper-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lakekeeper -d lakekeeper"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # One-shot container that runs `lakekeeper migrate` and exits 0. The main
+  # lakekeeper service waits on this completing successfully before starting.
+  lakekeeper-migrate:
+    image: &lakekeeper-image quay.io/lakekeeper/catalog:latest-main
+    command: ["migrate"]
+    environment: &lakekeeper-env
+      LAKEKEEPER__PG_ENCRYPTION_KEY: "this-is-not-secret-replace-me"
+      LAKEKEEPER__PG_DATABASE_URL_READ: postgresql://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper
+      RUST_LOG: info
+    depends_on:
+      lakekeeper-db:
+        condition: service_healthy
+    restart: "no"
+
+  # The Iceberg REST catalog server. Auth is intentionally disabled in this
+  # demo compose (no OIDC), so anyone on the network can call the catalog.
+  #
+  # NOTE: the lakekeeper image is distroless (no `/bin/sh`, no `curl`, no
+  # `wget`), so we MUST use the binary's built-in `healthcheck` subcommand
+  # rather than `CMD-SHELL` — anything that needs a shell errors with
+  # `OCI runtime exec failed: exec: "/bin/sh": no such file or directory`
+  # and the container reports `unhealthy` even though it's serving fine.
+  lakekeeper:
+    image: *lakekeeper-image
+    command: ["serve"]
+    environment:
+      <<: *lakekeeper-env
+      LAKEKEEPER__BASE_URI: http://lakekeeper:8181
+    ports:
+      - "8181:8181"
+    depends_on:
+      lakekeeper-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/home/nonroot/lakekeeper", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  # Bootstraps Lakekeeper and creates the `lineage` warehouse pointing at
+  # MinIO under prefix `iceberg/`. Idempotent — re-running on an already
+  # bootstrapped server is a no-op.
+  lakekeeper-bootstrap:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      lakekeeper:
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./scripts/bootstrap-lakekeeper.sh:/bootstrap.sh:ro
+    entrypoint: ["sh", "/bootstrap.sh"]
+    environment:
+      LAKEKEEPER_URL: http://lakekeeper:8181
+      WAREHOUSE_NAME: lineage
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_BUCKET: lineage-events
+      MINIO_KEY_PREFIX: iceberg
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    restart: "no"
+
+  # Override the default table-service to write to the Iceberg sink. The
+  # demo recipe (`just run-e2e-demo output=iceberg`) collects the Iceberg
+  # output into `demo/results/iceberg/lineage-events/`, mirroring the
+  # symmetric `demo/results/deltalake/lineage-events/` from the delta-only
+  # demo. To exercise the dual-sink fan-out (write the same RPC to BOTH
+  # delta and iceberg), set `TABLE_SINKS: delta,iceberg` here — the
+  # service code supports any non-empty subset of `delta`, `iceberg`.
+  table-service:
+    environment:
+      TABLE_SINKS: iceberg
+      ICEBERG_CATALOG_URI: http://lakekeeper:8181/catalog
+      ICEBERG_WAREHOUSE: lineage
+      ICEBERG_NAMESPACE: lineage
+      ICEBERG_TABLE: events
+      ICEBERG_PARTITION_COLS: event_kind
+      # Iceberg writes Parquet directly to MinIO using these credentials —
+      # Lakekeeper hands back the table location, the sidecar does the upload.
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_ENDPOINT_URL: http://minio:9000
+      AWS_S3_ALLOW_UNSAFE_RENAME: "true"
+    depends_on:
+      lakekeeper-bootstrap:
+        condition: service_completed_successfully
+
+  # The minio-setup one-shot from the base compose runs once, exits 0, but
+  # has no `restart: no` — pin it here so depends_on `service_completed_successfully`
+  # works deterministically.
+  minio-setup:
+    restart: "no"
+
+volumes:
+  lakekeeper-db-data:
