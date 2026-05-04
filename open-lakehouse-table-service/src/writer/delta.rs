@@ -1,11 +1,17 @@
 use std::collections::HashMap;
 
+use async_trait::async_trait;
 use deltalake::arrow::array::RecordBatch;
 use deltalake::protocol::SaveMode;
 use deltalake::{DeltaOps, DeltaTable, DeltaTableBuilder};
 
 use crate::config::Config;
+use crate::writer::sink::{SinkError, TableSink};
 
+/// Delta Lake sink for the lineage events table.
+///
+/// Owns a URI + `storage_options` map; opens (or creates) the table on every
+/// `append` so concurrent writers from other engines see a fresh snapshot.
 #[derive(Clone)]
 pub struct DeltaWriter {
     table_uri: String,
@@ -13,12 +19,15 @@ pub struct DeltaWriter {
     partition_cols: Vec<String>,
 }
 
+/// Forward-looking alias matching the new `TableSink` naming convention.
+pub type DeltaSink = DeltaWriter;
+
 impl DeltaWriter {
     pub fn new(cfg: &Config) -> Self {
         Self {
-            table_uri: cfg.table_path.clone(),
+            table_uri: cfg.delta.table_path.clone(),
             storage_options: cfg.storage_options.clone(),
-            partition_cols: cfg.partition_cols.clone(),
+            partition_cols: cfg.delta.partition_cols.clone(),
         }
     }
 
@@ -67,6 +76,19 @@ impl DeltaWriter {
         .map_err(|e| DeltaWriteError::Create(e.to_string()))?;
 
         Ok(table.0)
+    }
+}
+
+#[async_trait]
+impl TableSink for DeltaWriter {
+    fn name(&self) -> &'static str {
+        "delta"
+    }
+
+    async fn append(&self, batch: RecordBatch) -> Result<(), SinkError> {
+        DeltaWriter::append(self, batch)
+            .await
+            .map_err(|e| SinkError::Delta(e.to_string()))
     }
 }
 

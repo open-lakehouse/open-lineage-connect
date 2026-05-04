@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use buffa::OwnedView;
 use connectrpc::{ConnectError, Context};
 
@@ -6,16 +8,20 @@ use crate::table::v1::{
     TableWriterService, WriteBatchRequestView, WriteBatchResponse, WriteEventRequestView,
     WriteEventResponse,
 };
-use crate::writer::delta::DeltaWriter;
 use crate::writer::schema::events_to_record_batch;
+use crate::writer::sink::TableSink;
 
+/// Connect-RPC service that fans every incoming Arrow `RecordBatch` out to
+/// one or more `TableSink`s. v1 is fail-fast: the first sink error aborts
+/// the RPC, mirroring the legacy single-`DeltaWriter` behavior so existing
+/// `delta`-only deployments see no change.
 pub struct TableWriterServiceImpl {
-    writer: DeltaWriter,
+    sinks: Vec<Arc<dyn TableSink>>,
 }
 
 impl TableWriterServiceImpl {
-    pub fn new(writer: DeltaWriter) -> Self {
-        Self { writer }
+    pub fn new(sinks: Vec<Arc<dyn TableSink>>) -> Self {
+        Self { sinks }
     }
 }
 
@@ -33,10 +39,12 @@ impl TableWriterService for TableWriterServiceImpl {
         let batch = events_to_record_batch(std::slice::from_ref(event_ref))
             .map_err(|e| ConnectError::internal(format!("schema conversion: {e}")))?;
 
-        self.writer.append(batch).await.map_err(|e| {
-            tracing::error!("delta write failed: {e}");
-            ConnectError::internal(format!("delta write: {e}"))
-        })?;
+        for sink in &self.sinks {
+            sink.append(batch.clone()).await.map_err(|e| {
+                tracing::error!("{} write failed: {e}", sink.name());
+                ConnectError::internal(format!("{}: {e}", sink.name()))
+            })?;
+        }
 
         Ok((
             WriteEventResponse {
@@ -68,10 +76,12 @@ impl TableWriterService for TableWriterServiceImpl {
 
         let count = batch.num_rows() as i32;
 
-        self.writer.append(batch).await.map_err(|e| {
-            tracing::error!("delta write failed: {e}");
-            ConnectError::internal(format!("delta write: {e}"))
-        })?;
+        for sink in &self.sinks {
+            sink.append(batch.clone()).await.map_err(|e| {
+                tracing::error!("{} write failed: {e}", sink.name());
+                ConnectError::internal(format!("{}: {e}", sink.name()))
+            })?;
+        }
 
         Ok((
             WriteBatchResponse {

@@ -3,8 +3,11 @@
 End-to-end [OpenLineage](https://openlineage.io/) pipeline for an open lakehouse:
 
 - a **Go ingest service** that accepts events over REST and ConnectRPC,
-- a **Rust table-service sidecar** that persists every event into a Delta Lake
-  table (local FS, S3, or Unity Catalog), and
+- a **Rust table-service sidecar** that persists every event into a
+  Delta Lake table (local FS, S3, or Unity Catalog) and / or an
+  [Apache Iceberg](https://iceberg.apache.org/) table managed by an Iceberg
+  REST catalog such as [Lakekeeper](https://github.com/lakekeeper/lakekeeper),
+  with fan-out to both lakehouses on the same RPC, and
 - an **Apache Spark 4 plugin** that observes SQL / DataFrame / Structured
   Streaming jobs and emits typed `lineage.v1.RunEvent` protobufs (including
   full column-level lineage following the OpenLineage 1-2-0 spec).
@@ -121,14 +124,28 @@ just run-e2e-demo
 # explicit deltalake output
 just run-e2e-demo output=deltalake
 
-# reserved for a follow-up PR (exits non-zero)
+# write the lineage events table as Apache Iceberg via Lakekeeper + MinIO.
+# See "Iceberg sink with Lakekeeper" below for the full smoke-test flow.
 just run-e2e-demo output=iceberg
 ```
 
 Expected artifacts after a successful Delta run:
 
 - `demo/results/deltalake/spark-output/user_orders` (joined output Delta table)
-- `demo/results/deltalake/lineage-events` (lineage events table files copied from `table-service:/data/events`)
+- `demo/results/deltalake/lineage-events/` (lineage events Delta table files copied from `table-service:/data/events`)
+
+Expected artifacts after a successful Iceberg run — symmetric layout, the
+lineage events table is written as Iceberg instead of Delta:
+
+- `demo/results/iceberg/spark-output/user_orders` (joined output Delta table — the Spark job is unchanged)
+- `demo/results/iceberg/lineage-events/lineage/events/metadata/*.metadata.json` (Iceberg table metadata committed by Lakekeeper)
+- `demo/results/iceberg/lineage-events/lineage/events/metadata/*.avro` (Iceberg snapshots + manifest list files)
+- `demo/results/iceberg/lineage-events/lineage/events/data/event_kind=*/*.parquet` (Parquet data files, partitioned by `event_kind`)
+
+To fan-out the same RPC to BOTH lakehouses (Delta + Iceberg) in one demo
+run, edit `docker-compose.iceberg.yaml` and change the `table-service`
+env from `TABLE_SINKS: iceberg` to `TABLE_SINKS: delta,iceberg`. The
+sidecar supports any non-empty subset of `delta`, `iceberg`.
 
 ## Endpoints
 
@@ -421,19 +438,99 @@ automatically.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `TABLE_SERVICE_PORT` | `8091` | TCP port the service listens on. |
+| `TABLE_SINKS` | `delta` | Comma-separated list of active sinks. Supported: `delta`, `iceberg`. Set `delta,iceberg` to fan-out every `WriteBatch` RPC to both lakehouses. |
 | `DELTA_STORAGE` | `local` | One of `local`, `s3`, or `unity`. |
 | `DELTA_TABLE_PATH` | `/data/events` | Local path or `s3://bucket/prefix` URL for the Delta table. |
 | `DELTA_PARTITION_COLS` | `event_kind` | Comma-separated list of partition columns (`event_kind`, `event_type`, …). |
+| `ICEBERG_CATALOG_URI` | `http://localhost:8181/catalog` | REST catalog URL — Lakekeeper, Polaris, Tabular, etc. Only consulted when `iceberg` is in `TABLE_SINKS`. |
+| `ICEBERG_WAREHOUSE` | `lineage` | Iceberg `warehouse` REST property. For Lakekeeper this is the warehouse *name*; for other servers it may be an `s3://bucket/prefix` URI. |
+| `ICEBERG_NAMESPACE` | `lineage` | Iceberg namespace. Auto-created on first write if missing. |
+| `ICEBERG_TABLE` | `events` | Iceberg table name. Auto-created on first write if missing. |
+| `ICEBERG_PARTITION_COLS` | `event_kind` | Identity-transform partition columns. Empty string disables partitioning. |
+| `ICEBERG_TOKEN` | *(unset)* | Optional bearer token forwarded as the `token` REST property (Lakekeeper OIDC). |
 | `RUST_LOG` | *(unset)* | Standard `tracing-subscriber` filter (e.g. `info`, `open_lakehouse_table_service=debug`). |
 
 S3 / Unity Catalog credentials are picked up from standard environment
-variables when `DELTA_STORAGE=s3` or `unity`:
+variables when `DELTA_STORAGE=s3` or `unity`, **and** when the Iceberg sink
+writes Parquet directly to MinIO/S3 alongside the Lakekeeper-managed
+metadata:
 
 | Variable | Used by |
 |----------|---------|
-| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | `s3` backend |
-| `AWS_ENDPOINT_URL`, `AWS_S3_ALLOW_UNSAFE_RENAME` | `s3` backend (MinIO) |
-| `UNITY_CATALOG_URL`, `UNITY_CATALOG_TOKEN` | `unity` backend |
+| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | `s3` Delta backend, Iceberg Parquet uploads |
+| `AWS_ENDPOINT_URL`, `AWS_S3_ALLOW_UNSAFE_RENAME` | `s3` Delta backend (MinIO), Iceberg Parquet uploads |
+| `UNITY_CATALOG_URL`, `UNITY_CATALOG_TOKEN` | `unity` Delta backend |
+
+### Iceberg sink with Lakekeeper
+
+A second Compose file, [`docker-compose.iceberg.yaml`](./docker-compose.iceberg.yaml),
+adds an [Apache Iceberg REST catalog](https://iceberg.apache.org/spec/#rest-catalog)
+backed by [Lakekeeper](https://github.com/lakekeeper/lakekeeper) plus a
+one-shot `lakekeeper-bootstrap` container that:
+
+1. Calls `/management/v1/bootstrap` (idempotent).
+2. Creates a warehouse named `lineage` pointing at the existing MinIO
+   `lineage-events` bucket under prefix `iceberg/`.
+
+When you bring the override up, the table-service env is overridden to
+`TABLE_SINKS=iceberg` so every event lands in the Iceberg table. Set
+`TABLE_SINKS=delta,iceberg` in the same compose file if you want the
+sidecar to fan the same RPC out to BOTH lakehouses.
+
+```bash
+# Bring up the iceberg stack (lineage + table + minio + lakekeeper + postgres).
+just stack-up-iceberg
+just wait-healthy-iceberg
+
+# Send a few events through and watch them appear in the Iceberg table…
+curl -s -H 'Authorization: Bearer valid-token' -H 'Content-Type: application/json' \
+  -d @demo/events/run-start.json http://localhost:8090/lineage
+
+# Tear down + remove all volumes.
+just stack-down-iceberg
+```
+
+The Lakekeeper management UI is reachable at `http://localhost:8181`. Iceberg
+data files are written under `s3://lineage-events/iceberg/lineage/events/data/…`
+inside MinIO (browse via the MinIO console at `http://localhost:9001`).
+
+#### End-to-end smoke test (`just run-e2e-demo output=iceberg`)
+
+The same `run-e2e-demo` driver that exercises the Delta path runs the iceberg
+flow when invoked with `output=iceberg`. It brings up the full Lakekeeper +
+Postgres + MinIO stack, runs the existing Spark job (`demos/jobs/user_orders_join.py`),
+waits for the async forwarder to flush, copies the Iceberg table out of MinIO,
+and **fails loudly** if the Iceberg side never materialized:
+
+```bash
+# Equivalent shorthand: just run-e2e-demo-iceberg
+just run-e2e-demo output=iceberg
+```
+
+After a successful run you'll find — note the **symmetric** layout: the
+`lineage-events/` directory mirrors the Delta-only demo's
+`demo/results/deltalake/lineage-events/`, just in Iceberg format:
+
+| Path | Contents |
+|------|----------|
+| `demo/results/iceberg/spark-output/user_orders` | Delta table written by the Spark job (joined dataset; the Spark job is unchanged). |
+| `demo/results/iceberg/lineage-events/lineage/events/metadata/*.metadata.json` | Iceberg table metadata committed by Lakekeeper. |
+| `demo/results/iceberg/lineage-events/lineage/events/metadata/*.avro` | Iceberg snapshot + manifest list files. |
+| `demo/results/iceberg/lineage-events/lineage/events/data/event_kind=*/*.parquet` | Parquet data files, partitioned by `event_kind`. |
+
+The verification step (`just verify-iceberg-results <dir>`) asserts that at
+least one `*.metadata.json` and one `*.parquet` file were written, so a
+silent regression in the Iceberg sink can never look like a passing run.
+
+#### Test layering
+
+The Iceberg sink ships with two complementary test layers, so you don't
+*need* the full Compose stack to validate changes:
+
+| Layer | Catalog | Command | Notes |
+|-------|---------|---------|-------|
+| **Unit** (always-on) | In-process `MemoryCatalog` (no Docker, no network) | `just rust-test` / `make rust-test` | Validates the full create-namespace → create-table → fast-append → snapshot path including partition fan-out. |
+| **Integration** (opt-in, `#[ignore]`'d) | Live Lakekeeper from `docker-compose.iceberg.yaml` | `just stack-up-iceberg && just test-iceberg-integration` | Exercises the same code against a real REST catalog + MinIO. |
 
 ### Delta schema
 

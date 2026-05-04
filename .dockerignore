@@ -1,0 +1,73 @@
+# Build context excludes for both Dockerfiles. Without this file, the
+# `lineage-service` build context exceeds 10 GB because `COPY . .` pulls in
+# the Rust `target/` (~9 GB), Scala sbt caches, demo result fixtures, the
+# `.git` history, etc. — leading to multi-minute build context transfers
+# and frequent BuildKit "input/output error" crashes on disk-pressured
+# Docker daemons.
+#
+# Each pattern is matched against the path *relative to the build context
+# root* (the repo root). Subdirectory names like `target/` match anywhere.
+#
+# Keep this in sync with `.gitignore` (binary build artifacts only — source
+# files that are committed should NOT be listed here).
+
+# Version control history — never needed at build time.
+.git/
+.gitignore
+.gitattributes
+
+# Rust build outputs — `open-lakehouse-table-service/Dockerfile` runs
+# `cargo build --release` in a clean stage anyway, so any pre-built
+# `target/` from the host is wasted.
+target/
+**/target/
+
+# Scala / sbt build outputs from the Spark plugin.
+spark-openlineage-plugin/target/
+spark-openlineage-plugin/project/target/
+spark-openlineage-plugin/project/project/
+spark-openlineage-plugin/.bloop/
+spark-openlineage-plugin/.metals/
+spark-openlineage-plugin/.bsp/
+
+# Demo result fixtures — committed for reference but not needed in image.
+demo/results/
+
+# Buf-generated proto export — recreated inside the Rust Dockerfile's
+# proto stage. Keeping a stale host copy can mask wrong-version bugs.
+open-lakehouse-table-service/proto-export/
+
+# Editor / IDE state.
+.idea/
+.vscode/
+.metals/
+.bloop/
+.bsp/
+.cursor/
+**/.DS_Store
+
+# Local env files & secrets.
+.env
+.env.*
+!.env.example
+
+# Test outputs / coverage.
+*.coverprofile
+coverage.*
+*.out
+*.test
+
+# Local Spark/Derby state.
+metastore_db/
+derby.log
+
+# Docker-specific.
+.dockerignore
+docker-compose*.yaml
+docker-compose*.yml
+Dockerfile*
+
+# Project-internal docs that don't belong in any image.
+AGENTS.md
+README.md
+*.md

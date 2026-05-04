@@ -9,6 +9,14 @@ connectrpc = { version = "0.2", features = ["axum", "client", "server"] }
 buffa = { version = "0.2", features = ["json"] }
 buffa-types = { version = "0.2", features = ["json"] }
 deltalake = { version = "0.28", features = ["s3", "datafusion"] }
+# Iceberg 0.7.x is the last release that pins arrow/parquet 55.x, matching the
+# version pulled in by `deltalake` 0.28. Bumping iceberg to >=0.8 also requires
+# bumping deltalake (or vendoring an arrow conversion bridge).
+iceberg = "0.7"
+iceberg-catalog-rest = "0.7"
+parquet = "55"
+async-trait = "0.1"
+thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 axum = "0.7"
 serde = { version = "1", features = ["derive"] }
