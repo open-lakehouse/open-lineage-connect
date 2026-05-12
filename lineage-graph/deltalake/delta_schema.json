@@ -1,0 +1,324 @@
+{
+  "catalog": [
+    {
+      "name": "test",
+      "type": "deltalake",
+      "metastore": {
+        "type": "unity",
+        "host": "http://unitycatalog:8080",
+        "databricksCatalogName": "demo"
+      }
+    }
+  ],
+  "node": [
+    {
+      "dataSourceGroup": {
+        "externalDataSource": {
+          "enabled": true,
+          "catalog": "test",
+          "schema": "results",
+          "table": "jobs",
+          "mappedField": [
+            {
+              "sourceFieldName": "run_id",
+              "targetFieldName": "run_id"
+            },
+            {
+              "sourceFieldName": "job_name",
+              "targetFieldName": "job_name"
+            },
+            {
+              "sourceFieldName": "job_namespace",
+              "targetFieldName": "job_namespace"
+            },
+            {
+              "sourceFieldName": "event_time",
+              "targetFieldName": "event_time"
+            },
+            {
+              "sourceFieldName": "event_type",
+              "targetFieldName": "event_type"
+            },
+            {
+              "sourceFieldName": "producer",
+              "targetFieldName": "producer"
+            }
+          ]
+        }
+      },
+      "label": "Job",
+      "id": [
+        {
+          "name": "run_id",
+          "type": "STRING"
+        }
+      ],
+      "attribute": [
+        {
+          "name": "job_name",
+          "type": "STRING"
+        },
+        {
+          "name": "job_namespace",
+          "type": "STRING"
+        },
+        {
+          "name": "event_time",
+          "type": "DATETIME"
+        },
+        {
+          "name": "event_type",
+          "type": "STRING"
+        },
+        {
+          "name": "producer",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "dataSourceGroup": {
+        "unionDataSource": {
+          "enabled": true,
+          "input": [
+            {
+              "catalog": "test",
+              "schema": "results",
+              "table": "job_outputs",
+              "mappedField": [
+                {
+                  "sourceFieldName": "dataset_name",
+                  "targetFieldName": "dataset_name"
+                },
+                {
+                  "sourceFieldName": "dataset_namespace",
+                  "targetFieldName": "dataset_namespace"
+                },
+                {
+                  "sourceFieldName": "job_name",
+                  "targetFieldName": "job_name"
+                },
+                {
+                  "sourceFieldName": "job_namespace",
+                  "targetFieldName": "job_namespace"
+                },
+                {
+                  "sourceFieldName": "event_time",
+                  "targetFieldName": "event_time"
+                },
+                {
+                  "sourceFieldName": "event_type",
+                  "targetFieldName": "event_type"
+                }
+              ]
+            },
+            {
+              "catalog": "test",
+              "schema": "results",
+              "table": "job_inputs",
+              "mappedField": [
+                {
+                  "sourceFieldName": "dataset_name",
+                  "targetFieldName": "dataset_name"
+                },
+                {
+                  "sourceFieldName": "dataset_namespace",
+                  "targetFieldName": "dataset_namespace"
+                },
+                {
+                  "sourceFieldName": "job_name",
+                  "targetFieldName": "job_name"
+                },
+                {
+                  "sourceFieldName": "job_namespace",
+                  "targetFieldName": "job_namespace"
+                },
+                {
+                  "sourceFieldName": "event_time",
+                  "targetFieldName": "event_time"
+                },
+                {
+                  "sourceFieldName": "event_type",
+                  "targetFieldName": "event_type"
+                }
+              ]
+            }
+          ],
+          "dedupKey": [
+            "dataset_name",
+            "dataset_namespace"
+          ]
+        }
+      },
+      "label": "Dataset",
+      "id": [
+        {
+          "name": "dataset_name",
+          "type": "STRING"
+        },
+        {
+          "name": "dataset_namespace",
+          "type": "STRING"
+        }
+      ],
+      "attribute": [
+        {
+          "name": "dataset_name",
+          "type": "STRING"
+        },
+        {
+          "name": "dataset_namespace",
+          "type": "STRING"
+        },
+        {
+          "name": "job_name",
+          "type": "STRING"
+        },
+        {
+          "name": "job_namespace",
+          "type": "STRING"
+        },
+        {
+          "name": "event_time",
+          "type": "DATETIME"
+        },
+        {
+          "name": "event_type",
+          "type": "STRING"
+        }
+      ]
+    }
+  ],
+  "edge": [
+    {
+      "dataSourceGroup": {
+        "externalDataSource": {
+          "enabled": true,
+          "catalog": "test",
+          "schema": "results",
+          "table": "job_outputs",
+          "mappedField": [
+            {
+              "sourceFieldName": "run_id",
+              "targetFieldName": "run_id"
+            },
+            {
+              "sourceFieldName": "dataset_name",
+              "targetFieldName": "dataset_name"
+            },
+            {
+              "sourceFieldName": "dataset_namespace",
+              "targetFieldName": "dataset_namespace"
+            },
+            {
+              "sourceFieldName": "event_time",
+              "targetFieldName": "event_time"
+            },
+            {
+              "sourceFieldName": "event_type",
+              "targetFieldName": "event_type"
+            }
+          ]
+        }
+      },
+      "label": "PRODUCES",
+      "fromNodeLabel": "Job",
+      "toNodeLabel": "Dataset",
+      "fromKey": [
+        {
+          "name": "run_id",
+          "type": "STRING"
+        }
+      ],
+      "toKey": [
+        {
+          "name": "dataset_name",
+          "type": "STRING"
+        },
+        {
+          "name": "dataset_namespace",
+          "type": "STRING"
+        }
+      ],
+      "attribute": [
+        {
+          "name": "run_id",
+          "type": "STRING"
+        },
+        {
+          "name": "event_time",
+          "type": "DATETIME"
+        },
+        {
+          "name": "event_type",
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "dataSourceGroup": {
+        "externalDataSource": {
+          "enabled": true,
+          "catalog": "test",
+          "schema": "results",
+          "table": "job_inputs",
+          "mappedField": [
+            {
+              "sourceFieldName": "dataset_name",
+              "targetFieldName": "dataset_name"
+            },
+            {
+              "sourceFieldName": "dataset_namespace",
+              "targetFieldName": "dataset_namespace"
+            },
+            {
+              "sourceFieldName": "run_id",
+              "targetFieldName": "run_id"
+            },
+            {
+              "sourceFieldName": "event_time",
+              "targetFieldName": "event_time"
+            },
+            {
+              "sourceFieldName": "event_type",
+              "targetFieldName": "event_type"
+            }
+          ]
+        }
+      },
+      "label": "CONSUMED_BY",
+      "fromNodeLabel": "Dataset",
+      "toNodeLabel": "Job",
+      "fromKey": [
+        {
+          "name": "dataset_name",
+          "type": "STRING"
+        },
+        {
+          "name": "dataset_namespace",
+          "type": "STRING"
+        }
+      ],
+      "toKey": [
+        {
+          "name": "run_id",
+          "type": "STRING"
+        }
+      ],
+      "attribute": [
+        {
+          "name": "run_id",
+          "type": "STRING"
+        },
+        {
+          "name": "event_time",
+          "type": "DATETIME"
+        },
+        {
+          "name": "event_type",
+          "type": "STRING"
+        }
+      ]
+    }
+  ]
+}
