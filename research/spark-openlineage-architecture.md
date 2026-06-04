@@ -440,7 +440,7 @@ own conflicting versions of any of these libraries.
 
 `buf generate` at the repo root produces:
 
-- `gen/**` Go stubs for the service.
+- `services/lineage/gen/**` Go stubs for the service.
 - `spark-openlineage-plugin/src/main/generated/**` Java message classes.
 
 The generated Java is **committed** so CI runners without `buf` (or a BSR
@@ -503,7 +503,7 @@ why each file exists:
    - The Go converter parses the equivalent JSON facet from external
      OpenLineage senders and lifts it into the same typed proto field.
    - The Rust table-service writes a per-event `column_lineage_json`
-     column to Delta (see `open-lakehouse-table-service/src/writer/schema.rs`).
+     column to Delta (see `crates/table-service/src/writer/schema.rs`).
 
 ### Future work
 

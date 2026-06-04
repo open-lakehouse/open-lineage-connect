@@ -30,7 +30,7 @@ End-to-end [OpenLineage](https://openlineage.io/) pipeline for an open lakehouse
                                              │ ConnectRPC
                                              ▼
                 ┌───────────────────────────────────────────────────┐
-                │  open-lakehouse-table-service (Rust, :8091)       │
+                │  table-service (Rust, :8091)                      │
                 │   • TableWriterService.WriteEvent / WriteBatch    │
                 │   • Arrow + deltalake → Delta Lake table          │
                 │   • Local FS / S3 / Unity Catalog volumes         │
@@ -43,7 +43,7 @@ End-to-end [OpenLineage](https://openlineage.io/) pipeline for an open lakehouse
 ```
 
 The Go service is the network entry point. Whenever it ingests an event it
-fires a non-blocking `OnEvent` callback; the `internal/forwarder` package
+fires a non-blocking `OnEvent` callback; the `services/lineage/internal/forwarder` package
 batches those callbacks and ships them to the Rust sidecar over ConnectRPC.
 The Rust sidecar converts each event into an Arrow `RecordBatch` (with a
 nullable `column_lineage_json` column for the typed
@@ -51,8 +51,8 @@ nullable `column_lineage_json` column for the typed
 
 | Component | Language | Default port | Source dir |
 |-----------|----------|--------------|------------|
-| Ingest service | Go 1.22+ | `8090` | [`cmd/`, `internal/`](./internal) |
-| Table-service sidecar | Rust 1.88+ | `8091` | [`open-lakehouse-table-service/`](./open-lakehouse-table-service) |
+| Ingest service | Go 1.22+ | `8090` | [`services/lineage/`](./services/lineage) |
+| Table-service sidecar | Rust 1.88+ | `8091` | [`crates/table-service/`](./crates/table-service) |
 | Spark plugin | Scala 2.13 / Spark 4.x | n/a | [`spark-openlineage-plugin/`](./spark-openlineage-plugin) |
 
 ## Prerequisites
@@ -73,12 +73,11 @@ nullable `column_lineage_json` column for the typed
 # generate Go code from protos
 make generate
 
-# run the server (default :8090)
+# build the server (compiles the module under services/lineage)
 make build
-PORT=8090 ./open-lineage-service
 
-# or run directly
-go run ./cmd/server
+# run directly from the Go module
+cd services/lineage && PORT=8090 go run ./cmd/server
 ```
 
 ### Run the full stack (Go ingest + Rust table-service + MinIO) with Docker Compose
@@ -414,7 +413,7 @@ buf curl --schema . --protocol connect \
 
 ## Rust table-service
 
-The [`open-lakehouse-table-service`](./open-lakehouse-table-service) sidecar
+The [`crates/table-service`](./crates/table-service) sidecar
 is the persistence half of the pipeline. It exposes a ConnectRPC service
 (`table.v1.TableWriterService`) over HTTP/1.1 with a single hot path
 (`WriteBatch`) plus a unary fallback (`WriteEvent`), and writes every event
@@ -448,7 +447,7 @@ automatically.
 | `ICEBERG_TABLE` | `events` | Iceberg table name. Auto-created on first write if missing. |
 | `ICEBERG_PARTITION_COLS` | `event_kind` | Identity-transform partition columns. Empty string disables partitioning. |
 | `ICEBERG_TOKEN` | *(unset)* | Optional bearer token forwarded as the `token` REST property (Lakekeeper OIDC). |
-| `RUST_LOG` | *(unset)* | Standard `tracing-subscriber` filter (e.g. `info`, `open_lakehouse_table_service=debug`). |
+| `RUST_LOG` | *(unset)* | Standard `tracing-subscriber` filter (e.g. `info`, `table_service=debug`). |
 
 S3 / Unity Catalog credentials are picked up from standard environment
 variables when `DELTA_STORAGE=s3` or `unity`, **and** when the Iceberg sink
@@ -578,17 +577,21 @@ partial-failure handling, auth scenarios, and the Go → Rust forwarder.
 proto/                                      # protobuf source of truth
   lineage/v1/lineage.proto                  # OpenLineage event + service definitions
   table/v1/table_writer.proto               # Rust table-service writer RPCs
-gen/                                        # buf-generated Go code
 
-cmd/server/main.go                          # Go server entrypoint
-internal/ingest/converter.go                # OpenLineage JSON → proto conversion
-internal/ingest/handler.go                  # REST ingestion (POST /lineage, /lineage/batch)
-internal/interceptor/auth.go                # Bearer-token authorization interceptor
-internal/interceptor/validate.go            # protovalidate interceptor
-internal/service/lineage.go                 # in-memory service implementation
-internal/forwarder/forwarder.go             # async batched Go → Rust forwarder
+Cargo.toml                                  # Cargo workspace (members: crates/*)
 
-open-lakehouse-table-service/               # Rust sidecar (Cargo crate)
+services/lineage/                           # Go ingest service (module root)
+  cmd/server/main.go                        # Go server entrypoint
+  gen/                                       # buf-generated Go code
+  internal/ingest/converter.go              # OpenLineage JSON → proto conversion
+  internal/ingest/handler.go                # REST ingestion (POST /lineage, /lineage/batch)
+  internal/interceptor/auth.go              # Bearer-token authorization interceptor
+  internal/interceptor/validate.go          # protovalidate interceptor
+  internal/service/lineage.go               # in-memory service implementation
+  internal/forwarder/forwarder.go           # async batched Go → Rust forwarder
+  Dockerfile
+
+crates/table-service/                       # Rust sidecar (Cargo workspace member)
   src/main.rs                               # axum + ConnectRPC bootstrap
   src/service.rs                            # TableWriterService impl
   src/writer/schema.rs                      # Arrow schema + per-event serialization
@@ -615,7 +618,7 @@ research/                                   # design docs (Spark architecture, l
 | Target | Description |
 |--------|-------------|
 | `generate` | Run `buf generate` (regenerates Go + Java protos). |
-| `proto-export` | `buf export` the proto tree into `open-lakehouse-table-service/proto-export` (consumed by Rust at build time). |
+| `proto-export` | `buf export` the proto tree into `crates/table-service/proto-export` (consumed by Rust at build time). |
 | `build` | `go build ./...`. |
 | `test` / `coverage` | Run Go tests with coverage profile / print per-function coverage. |
 | `lint` | Run `buf lint`. |
@@ -624,4 +627,4 @@ research/                                   # design docs (Spark architecture, l
 | `docker-build` / `docker-run` | Build / run the Go service Docker image. |
 | `docker-build-table` | Build the Rust table-service Docker image. |
 | `docker-compose-up` / `docker-compose-down` | Start / stop the full local stack (Go + Rust + MinIO). |
-| `clean` | Remove `gen/`, `coverage.out`, `proto-export/`, and run `sbt clean`. |
+| `clean` | Remove `services/lineage/gen/`, `services/lineage/coverage.out`, `crates/table-service/proto-export/`, and run `sbt clean`. |

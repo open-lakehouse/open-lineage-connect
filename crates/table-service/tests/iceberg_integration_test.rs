@@ -15,10 +15,10 @@
 use std::sync::Arc;
 
 use deltalake::arrow::array::{RecordBatch, StringArray, TimestampMicrosecondArray};
-use open_lakehouse_table_service::config::IcebergConfig;
-use open_lakehouse_table_service::writer::iceberg::IcebergSink;
-use open_lakehouse_table_service::writer::schema::arrow_schema;
-use open_lakehouse_table_service::writer::sink::TableSink;
+use table_service::config::IcebergConfig;
+use table_service::writer::iceberg::IcebergSink;
+use table_service::writer::schema::arrow_schema;
+use table_service::writer::sink::TableSink;
 
 /// Skip when Lakekeeper isn't reachable. Tests that depend on the live
 /// catalog should call this at the top and `return` early on `None`.

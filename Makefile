@@ -12,17 +12,17 @@ generate:
 	buf generate
 
 vendor:
-	go mod tidy
-	go mod vendor
+	cd services/lineage && go mod tidy
+	cd services/lineage && go mod vendor
 
 build: vendor
-	go build -mod=vendor ./...
+	cd services/lineage && go build -mod=vendor ./...
 
 test:
-	go test ./... -v -coverprofile=coverage.out
+	cd services/lineage && go test ./... -v -coverprofile=coverage.out
 
 coverage: test
-	go tool cover -func=coverage.out
+	cd services/lineage && go tool cover -func=coverage.out
 
 lint:
 	buf lint
@@ -30,20 +30,20 @@ lint:
 # Export all protos (with resolved buf deps) into the Rust project so
 # connectrpc-build can compile them without needing buf at build time.
 proto-export:
-	rm -rf open-lakehouse-table-service/proto-export
-	buf export --output=open-lakehouse-table-service/proto-export
+	rm -rf crates/table-service/proto-export
+	buf export --output=crates/table-service/proto-export
 
 rust-build: proto-export
-	cd open-lakehouse-table-service && cargo build
+	cargo build -p table-service
 
 rust-test: proto-export
-	cd open-lakehouse-table-service && cargo test
+	cargo test -p table-service
 
 docker-build:
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) services/lineage
 
 docker-build-table:
-	docker build -t $(TABLE_IMAGE_NAME):$(IMAGE_TAG) -f open-lakehouse-table-service/Dockerfile .
+	docker build -t $(TABLE_IMAGE_NAME):$(IMAGE_TAG) -f crates/table-service/Dockerfile .
 
 docker-run: docker-build
 	docker run --rm -p 8090:8090 $(IMAGE_NAME):$(IMAGE_TAG)
@@ -65,5 +65,5 @@ spark-plugin-clean:
 	cd spark-openlineage-plugin && sbt clean
 
 clean:
-	rm -rf gen coverage.out open-lakehouse-table-service/proto-export
+	rm -rf services/lineage/gen services/lineage/coverage.out crates/table-service/proto-export
 	cd spark-openlineage-plugin && sbt clean 2>/dev/null || true
