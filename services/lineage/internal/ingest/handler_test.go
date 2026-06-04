@@ -302,7 +302,7 @@ func TestHandleBatch_InvalidJSON(t *testing.T) {
 
 func TestHandleEvent_ExampleRunEvent(t *testing.T) {
 	srv, svc := newTestServer(t)
-	body := readExampleFile(t, "../../resources/examples/lineage/single/run-event.json")
+	body := readExampleFile(t, "../../../../resources/examples/lineage/single/run-event.json")
 
 	resp, err := http.Post(srv.URL+"/lineage", "application/json", bytes.NewBuffer(body))
 	if err != nil {
@@ -328,7 +328,7 @@ func TestHandleEvent_ExampleRunEvent(t *testing.T) {
 
 func TestHandleEvent_ExampleJobEvent(t *testing.T) {
 	srv, svc := newTestServer(t)
-	body := readExampleFile(t, "../../resources/examples/lineage/single/job-event.json")
+	body := readExampleFile(t, "../../../../resources/examples/lineage/single/job-event.json")
 
 	resp, err := http.Post(srv.URL+"/lineage", "application/json", bytes.NewBuffer(body))
 	if err != nil {
@@ -350,7 +350,7 @@ func TestHandleEvent_ExampleJobEvent(t *testing.T) {
 
 func TestHandleEvent_ExampleDatasetEvent(t *testing.T) {
 	srv, svc := newTestServer(t)
-	body := readExampleFile(t, "../../resources/examples/lineage/single/dataset-event.json")
+	body := readExampleFile(t, "../../../../resources/examples/lineage/single/dataset-event.json")
 
 	resp, err := http.Post(srv.URL+"/lineage", "application/json", bytes.NewBuffer(body))
 	if err != nil {
@@ -372,7 +372,7 @@ func TestHandleEvent_ExampleDatasetEvent(t *testing.T) {
 
 func TestHandleBatch_ExampleMixedBatch(t *testing.T) {
 	srv, svc := newTestServer(t)
-	body := readExampleFile(t, "../../resources/examples/lineage/batch/mixed-event-batch.json")
+	body := readExampleFile(t, "../../../../resources/examples/lineage/batch/mixed-event-batch.json")
 
 	resp, err := http.Post(srv.URL+"/lineage/batch", "application/json", bytes.NewBuffer(body))
 	if err != nil {
@@ -391,7 +391,7 @@ func TestHandleBatch_ExampleMixedBatch(t *testing.T) {
 
 func TestHandleEvent_ExampleColumnLineage(t *testing.T) {
 	srv, svc := newTestServer(t)
-	body := readExampleFile(t, "../../resources/examples/lineage/column-lineage/run-event-with-column-lineage.json")
+	body := readExampleFile(t, "../../../../resources/examples/lineage/column-lineage/run-event-with-column-lineage.json")
 
 	resp, err := http.Post(srv.URL+"/lineage", "application/json", bytes.NewBuffer(body))
 	if err != nil {

@@ -3,12 +3,12 @@ use std::sync::Arc;
 use axum::{Router, routing::get};
 use tracing_subscriber::EnvFilter;
 
-use open_lakehouse_table_service::config::{Config, SinkKind};
-use open_lakehouse_table_service::service::TableWriterServiceImpl;
-use open_lakehouse_table_service::table::v1::TableWriterServiceExt;
-use open_lakehouse_table_service::writer::delta::DeltaWriter;
-use open_lakehouse_table_service::writer::iceberg::IcebergSink;
-use open_lakehouse_table_service::writer::sink::TableSink;
+use table_service::config::{Config, SinkKind};
+use table_service::service::TableWriterServiceImpl;
+use table_service::table::v1::TableWriterServiceExt;
+use table_service::writer::delta::DeltaWriter;
+use table_service::writer::iceberg::IcebergSink;
+use table_service::writer::sink::TableSink;
 
 #[tokio::main]
 async fn main() {

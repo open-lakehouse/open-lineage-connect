@@ -1,7 +1,7 @@
 services:
   lineage-service:
     build:
-      context: .
+      context: services/lineage
       dockerfile: Dockerfile
     ports:
       - "8090:8090"
@@ -15,7 +15,7 @@ services:
   table-service:
     build:
       context: .
-      dockerfile: open-lakehouse-table-service/Dockerfile
+      dockerfile: crates/table-service/Dockerfile
       args:
         CRATES_PROXY: ${CRATES_PROXY:-}
     ports:

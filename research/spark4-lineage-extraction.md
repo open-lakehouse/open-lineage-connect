@@ -208,7 +208,7 @@ Out of scope for this initial cut, explicitly parked:
 | File | Role |
 |---|---|
 | `proto/lineage/v1/lineage.proto` | Source of truth for event shape. Shared with Go service and Rust sidecar. |
-| `buf.gen.yaml` | Generates Go (`gen/`), Java (`spark-openlineage-plugin/src/main/generated/`). |
+| `buf.gen.yaml` | Generates Go (`services/lineage/gen/`), Java (`spark-openlineage-plugin/src/main/generated/`). |
 | `spark-openlineage-plugin/build.sbt` | Scala 2.13 / Spark 4.1.1 / JDK 17 build. Shading rules for protobuf + connectrpc + okhttp + kotlin. |
 | `spark-openlineage-plugin/COMPAT.md` | Live reference: Spark 4.1.1 Catalyst node classes + accessor signatures. |
 | `spark-openlineage-plugin/src/main/scala/com/openlakehouse/lineage/LineagePlugin.scala` | `SparkPlugin` entry point. |

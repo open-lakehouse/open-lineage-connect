@@ -40,9 +40,10 @@ vendor/
 .DS_Store
 */.DS_Store
 
-# Rust build artifacts
-open-lakehouse-table-service/target/
-open-lakehouse-table-service/proto-export/
+# Rust build artifacts (the Cargo workspace target dir lives at the repo root;
+# the trailing-slash pattern also matches any leftover per-crate target/ dirs)
+target/
+crates/table-service/proto-export/
 
 # Spark plugin build artifacts (sbt, Metals, IntelliJ)
 spark-openlineage-plugin/target/

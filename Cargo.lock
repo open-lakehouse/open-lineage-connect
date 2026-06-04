@@ -3817,31 +3817,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
-name = "open-lakehouse-table-service"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "axum 0.7.9",
- "buffa",
- "buffa-types",
- "connectrpc",
- "connectrpc-build",
- "deltalake",
- "futures",
- "http-body 1.0.1",
- "iceberg",
- "iceberg-catalog-rest",
- "parquet",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "opendal"
 version = "0.54.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5257,6 +5232,31 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "table-service"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum 0.7.9",
+ "buffa",
+ "buffa-types",
+ "connectrpc",
+ "connectrpc-build",
+ "deltalake",
+ "futures",
+ "http-body 1.0.1",
+ "iceberg",
+ "iceberg-catalog-rest",
+ "parquet",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

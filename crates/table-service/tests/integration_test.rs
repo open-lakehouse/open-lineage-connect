@@ -5,13 +5,13 @@ use deltalake::arrow::array::StringArray;
 use deltalake::arrow::datatypes::DataType;
 use deltalake::DeltaTableBuilder;
 
-use open_lakehouse_table_service::config::{Config, DeltaConfig};
-use open_lakehouse_table_service::lineage::v1::{
+use table_service::config::{Config, DeltaConfig};
+use table_service::lineage::v1::{
     open_lineage_event::Event, ColumnLineageDatasetFacet, FieldTransformation, InputField, Job,
     OpenLineageEvent, OpenLineageEventView, OutputDataset, OutputFieldLineage, Run, RunEvent,
 };
-use open_lakehouse_table_service::writer::delta::DeltaWriter;
-use open_lakehouse_table_service::writer::schema::{arrow_schema, events_to_record_batch};
+use table_service::writer::delta::DeltaWriter;
+use table_service::writer::schema::{arrow_schema, events_to_record_batch};
 
 fn local_config(path: &str) -> Config {
     Config {
@@ -115,7 +115,7 @@ fn test_column_lineage_fixture_round_trips_through_record_batch() {
 
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../resources/examples/lineage/column-lineage/run-event-with-column-lineage.json",
+        "/../../resources/examples/lineage/column-lineage/run-event-with-column-lineage.json",
     );
     let json = std::fs::read_to_string(path).expect("fixture readable");
     let raw: serde_json::Value =
@@ -270,7 +270,7 @@ async fn test_delta_writer_round_trip_with_column_lineage() {
     };
 
     let bytes = envelope.encode_to_vec();
-    let view: open_lakehouse_table_service::lineage::v1::OpenLineageEventView<'_> =
+    let view: table_service::lineage::v1::OpenLineageEventView<'_> =
         <OpenLineageEventView<'_> as buffa::MessageView>::decode_view(&bytes).unwrap();
 
     let batch = events_to_record_batch(std::slice::from_ref(&view)).unwrap();

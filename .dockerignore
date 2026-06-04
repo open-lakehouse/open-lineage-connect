@@ -16,7 +16,7 @@
 .gitignore
 .gitattributes
 
-# Rust build outputs — `open-lakehouse-table-service/Dockerfile` runs
+# Rust build outputs — `crates/table-service/Dockerfile` runs
 # `cargo build --release` in a clean stage anyway, so any pre-built
 # `target/` from the host is wasted.
 target/
@@ -35,7 +35,7 @@ demo/results/
 
 # Buf-generated proto export — recreated inside the Rust Dockerfile's
 # proto stage. Keeping a stale host copy can mask wrong-version bugs.
-open-lakehouse-table-service/proto-export/
+crates/table-service/proto-export/
 
 # Editor / IDE state.
 .idea/

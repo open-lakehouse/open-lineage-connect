@@ -58,16 +58,17 @@ stack-up-iceberg:
 stack-down-iceberg:
   @docker compose -f docker-compose.yaml -f docker-compose.iceberg.yaml down -v
 
-# Wipe the Rust debug build artifacts (`open-lakehouse-table-service/target/debug`)
-# without touching the rest of `target/`. The debug profile is what `cargo test`
-# and unqualified `cargo build` produce; on this codebase it grows to ~9 GB
-# because of the deltalake + iceberg + datafusion dep tree. Cargo will rebuild
-# incrementally on the next invocation.
+# Wipe the Rust debug build artifacts (workspace-root `target/debug`) without
+# touching the rest of `target/`. The debug profile is what `cargo test` and
+# unqualified `cargo build` produce; on this codebase it grows to ~9 GB because
+# of the deltalake + iceberg + datafusion dep tree. Cargo will rebuild
+# incrementally on the next invocation. (The Cargo workspace puts the shared
+# target dir at the repo root, not under the crate.)
 cargo-clean:
-  @before=$(du -sh open-lakehouse-table-service/target 2>/dev/null | awk '{print $1}'); \
-  rm -rf open-lakehouse-table-service/target/debug \
-         open-lakehouse-table-service/target/tmp; \
-  after=$(du -sh open-lakehouse-table-service/target 2>/dev/null | awk '{print $1}'); \
+  @before=$(du -sh target 2>/dev/null | awk '{print $1}'); \
+  rm -rf target/debug \
+         target/tmp; \
+  after=$(du -sh target 2>/dev/null | awk '{print $1}'); \
   echo "Reclaimed: target/debug (was $before -> now $after)"
 
 # Recover a Docker daemon that's gotten into a bad state — usually after a
@@ -178,13 +179,12 @@ verify-iceberg-results lineage_iceberg_dir:
 # brought up by `stack-up-iceberg`. The test is gated on LAKEKEEPER_URL —
 # without that env var it is skipped automatically.
 test-iceberg-integration:
-  @cd open-lakehouse-table-service && \
-    LAKEKEEPER_URL=http://localhost:8181/catalog \
+  @LAKEKEEPER_URL=http://localhost:8181/catalog \
     AWS_REGION=us-east-1 \
     AWS_ACCESS_KEY_ID=minioadmin \
     AWS_SECRET_ACCESS_KEY=minioadmin \
     AWS_ENDPOINT_URL=http://localhost:9000 \
-      cargo test --test iceberg_integration -- --nocapture --ignored
+      cargo test -p table-service --test iceberg_integration -- --nocapture --ignored
 
 spark-job spark_output_dir:
   @if [ -f .env ]; then \

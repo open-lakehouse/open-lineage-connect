@@ -1,0 +1,23 @@
+# Build context excludes for services/lineage/Dockerfile. The Go image build
+# uses the vendored module (`go build -mod=vendor`), so it only needs the
+# committed source + vendor/ tree. Keep build outputs and local state out of
+# the context to keep transfers fast.
+
+# Version control history.
+.git/
+.gitignore
+
+# Go build / test outputs.
+coverage.out
+coverage.*
+*.coverprofile
+*.out
+*.test
+
+# Editor / IDE state.
+.idea/
+.vscode/
+**/.DS_Store
+
+# Docker-specific.
+.dockerignore
