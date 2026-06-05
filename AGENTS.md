@@ -14,6 +14,7 @@ Lessons learned and context for AI agents working in this repo.
 - The `.proto` file **must** include a `go_package` option matching the Go module path, e.g. `github.com/open-lakehouse/open-lineage-service/gen/lineage/v1;lineagev1`. Without it, `buf generate` fails with a cryptic `protoc-gen-connect-go` error about import paths.
 - Well-known types (`google.protobuf.Timestamp`, `Struct`) are bundled with buf — do **not** add `buf.build/googleapis/googleapis` to `buf.yaml` deps. buf will warn about unused deps if you do.
 - After changing the proto, always `rm -rf services/lineage/gen && buf generate` to avoid stale files.
+- **Protobuf gencode/runtime pin (Spark plugin):** the committed Java gencode under `spark-openlineage-plugin/src/main/generated/` is stamped with a `RuntimeVersion` (currently `4.35.0`). `protobufVersion` in `spark-openlineage-plugin/build.sbt` is the *runtime* and **must be ≥ the gencode version**, or every suite that touches a generated message aborts at class-init with `ProtobufRuntimeVersionException: Detected incompatible Protobuf Gencode/Runtime versions ... runtime version cannot be older than the linked gencode version`. When you regenerate the Java protos, bump `protobufVersion` to match.
 
 ## ConnectRPC Patterns
 
@@ -64,6 +65,59 @@ Lessons learned and context for AI agents working in this repo.
 
 - `docker-compose.yaml` at the repo root runs both services plus MinIO for S3-compatible testing.
 - `ecs/task-definition.json` is a Fargate task template with both containers sharing `localhost` via `awsvpc` networking.
+
+## Spark Plugin Config Reference (`spark.openlineage.*`)
+
+Parsed in `spark-openlineage-plugin/.../LineageConfig.scala`. Beyond the core
+keys (`serviceUrl`, `namespace`, `authToken`, `jobName`, `emit.*`, `queueSize`,
+`batchFlushMs`, `disabled`, `failOpen`):
+
+- **User-defined facets:** `spark.openlineage.facets.run.<key>=<value>` and
+  `spark.openlineage.facets.job.<key>=<value>` inject operator facets onto
+  `Run.facets` / `Job.facets`. Built-in run facets win on key collision; empty
+  values are dropped. Run facets are merged in both listeners; job facets are
+  encoded by `RunEventBuilder.buildJob`.
+- **TLS / mTLS:** `spark.openlineage.tls.trustStorePath|trustStorePassword|trustStoreType`
+  (pin a private-CA/self-signed lineage-service cert) and `…tls.keyStorePath|keyStorePassword|keyStoreType`
+  (client cert for mTLS). Store type defaults to `PKCS12`. `ConnectRpcClient.okHttpForTls`
+  builds the `SSLContext`; `buildSink` uses it whenever any trust/key material is set.
+- **Retry/backoff:** `spark.openlineage.retry.maxRetries` (default 2),
+  `retry.backoffMs` (default 200, exponential), `retry.jitterFactor` (default
+  0.5, symmetric jitter in `[0,1]`). The pure math lives in
+  `transport/RetryBackoff.scala` (jitter via an injectable `rng` for
+  deterministic tests).
+- **Rate limiting:** `spark.openlineage.rateLimit.minIntervalMs` (default 0 =
+  off) spaces flushes to the single lineage endpoint; logic in
+  `transport/RateLimiter.scala` (injectable clock + sleeper for tests).
+
+## Follow-ups / Parked Work
+
+Historic "future work" items (see `research/spark-openlineage-architecture.md`
+§12 and `research/spark4-lineage-extraction.md` §6). Status:
+
+- **Lakekeeper bearer token (Iceberg sink)** — DONE. Threaded via
+  `iceberg::build_rest_props` (sourced from `ICEBERG_TOKEN`), covered by
+  `build_rest_props_*` unit tests plus the `#[ignore]`d
+  `iceberg_integration_test::auth_token_*` live test.
+- **Plugin ConnectRPC emitter** — DONE (was already wired in `buildSink`;
+  selection covered by `LineageDriverPluginSpec`).
+- **User-defined facets** — DONE (`spark.openlineage.facets.run/job.*`).
+- **TLS + mTLS transport** — DONE (`spark.openlineage.tls.*`).
+- **Retry policy tuning (jitter + rate limiting)** — DONE
+  (`spark.openlineage.retry.*` / `rateLimit.*`).
+- **Hive Metastore coverage** — DONE via a deterministic unit test
+  (`QueryPlanVisitorHiveSpec` constructs a `HiveTableRelation` directly, no
+  metastore needed). A Hive-enabled-Spark CI job remains optional.
+- **Spark Connect true E2E** — DONE as opt-in: `make spark-connect-e2e`
+  (`scripts/spark-connect-e2e.sh`) boots a real Connect server with the plugin
+  and drives it from a remote session; runs in CI only via the manual
+  `spark-connect-e2e` job in `.github/workflows/ci.yml`. The in-JVM
+  `LineagePluginSmokeSpec` remains the fast default-path check.
+
+Note: `.cursor/plans/spark_openlineage_plugin_2a538db4.plan.md` and
+`rust_sidecar_table_service_adec9bc5.plan.md` do exist (the `Glob` tool skips
+`.cursor/`), so the references to them in `build.sbt`/research docs are live, not
+dangling.
 
 ## Project Conventions
 

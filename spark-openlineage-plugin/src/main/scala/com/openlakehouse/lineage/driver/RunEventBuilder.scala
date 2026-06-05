@@ -19,8 +19,9 @@ import lineage.v1.Lineage
  * tests can override them without caring about git metadata.
  */
 final class RunEventBuilder(
-    producerUri: String  = RunEventBuilder.DefaultProducerUri,
-    schemaUrl: String    = RunEventBuilder.DefaultSchemaUrl
+    producerUri: String           = RunEventBuilder.DefaultProducerUri,
+    schemaUrl: String             = RunEventBuilder.DefaultSchemaUrl,
+    jobFacets: Map[String, String] = Map.empty
 ) {
 
   def build(ctx: RunContext): Lineage.RunEvent = {
@@ -52,11 +53,13 @@ final class RunEventBuilder(
       .build()
   }
 
-  private def buildJob(j: JobRef): Lineage.Job =
-    Lineage.Job.newBuilder()
+  private def buildJob(j: JobRef): Lineage.Job = {
+    val b = Lineage.Job.newBuilder()
       .setNamespace(j.namespace)
       .setName(j.name)
-      .build()
+    if (jobFacets.nonEmpty) b.setFacets(FacetEncoder.encode(jobFacets))
+    b.build()
+  }
 
   private def toInputDataset(d: DatasetRef, columnLineage: Option[ColumnLineageFacet]): Lineage.InputDataset = {
     val b = Lineage.InputDataset.newBuilder()

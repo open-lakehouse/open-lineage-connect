@@ -124,6 +124,45 @@ async fn integration_partitioned_table_against_lakekeeper() {
         .expect("partitioned append for a different partition should succeed");
 }
 
+/// Exercises the bearer-token auth path end-to-end: requires both
+/// `LAKEKEEPER_URL` and a non-empty `ICEBERG_TOKEN`. When the token is wrong
+/// Lakekeeper rejects the request and `from_config`/`append` surfaces an error;
+/// when correct the create-and-append path succeeds exactly as the unauth'd
+/// case does. Skipped unless both env vars are present.
+#[tokio::test]
+#[ignore = "requires a live Lakekeeper at $LAKEKEEPER_URL + $ICEBERG_TOKEN (just stack-up-iceberg)"]
+async fn auth_token_create_and_append_against_lakekeeper() {
+    let Some(catalog_uri) = lakekeeper_uri() else {
+        eprintln!("LAKEKEEPER_URL not set — skipping live auth integration test");
+        return;
+    };
+    let Some(token) = std::env::var("ICEBERG_TOKEN").ok().filter(|s| !s.is_empty()) else {
+        eprintln!("ICEBERG_TOKEN not set — skipping live auth integration test");
+        return;
+    };
+
+    let namespace = unique_ns("it_auth_create_append");
+    let cfg = IcebergConfig {
+        catalog_uri,
+        warehouse: std::env::var("ICEBERG_WAREHOUSE").unwrap_or_else(|_| "lineage".into()),
+        namespace,
+        table: "events".into(),
+        partition_cols: vec![],
+        token: Some(token),
+    };
+
+    let sink = IcebergSink::from_config(&cfg)
+        .await
+        .expect("build IcebergSink against Lakekeeper with a bearer token");
+
+    sink.append(one_row("run"))
+        .await
+        .expect("authenticated append should create namespace + table and commit");
+    sink.append(one_row("job"))
+        .await
+        .expect("authenticated second append should commit a new snapshot");
+}
+
 #[tokio::test]
 #[ignore = "requires a live Lakekeeper at $LAKEKEEPER_URL (just stack-up-iceberg)"]
 async fn integration_empty_batch_is_a_noop_against_lakekeeper() {

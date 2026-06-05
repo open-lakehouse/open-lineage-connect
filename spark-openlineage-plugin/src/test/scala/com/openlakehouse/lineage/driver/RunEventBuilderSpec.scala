@@ -59,6 +59,24 @@ final class RunEventBuilderSpec extends AnyFunSuite with Matchers {
     f.getFieldsOrThrow("funcName").getStringValue    shouldBe "saveAsTable"
   }
 
+  test("Job has no facets Struct when no job facets are configured") {
+    val ev = builder.build(ctx(RunStatus.Start))
+    ev.getJob.hasFacets shouldBe false
+  }
+
+  test("configured job facets are encoded onto Job.facets") {
+    val withJobFacets = new RunEventBuilder(
+      producerUri = "urn:test:producer",
+      schemaUrl   = "urn:test:schema",
+      jobFacets   = Map("team" -> "platform", "tier" -> "gold")
+    )
+    val ev = withJobFacets.build(ctx(RunStatus.Start))
+    ev.getJob.hasFacets shouldBe true
+    val f = ev.getJob.getFacets
+    f.getFieldsOrThrow("team").getStringValue shouldBe "platform"
+    f.getFieldsOrThrow("tier").getStringValue shouldBe "gold"
+  }
+
   test("FAIL event carries errorClass + errorMessage in Run facets") {
     val ev = builder.build(ctx(
       RunStatus.Fail,

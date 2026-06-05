@@ -21,8 +21,9 @@ import com.openlakehouse.lineage.transport.{ConnectRpcClient, ConnectRpcEventSin
  *   - Register listeners: QueryExecutionListener (done), SparkListener (TBD),
  *     StreamingQueryListener (TBD).
  *   - Receive TaskMetricsPayload messages from executors via Spark plugin RPC (TBD).
- *   - Build and emit RunEvent / JobEvent / DatasetEvent protobufs to
- *     open-lineage-service over ConnectRPC (TBD, currently a Noop sink).
+ *   - Build and emit RunEvent protobufs to open-lineage-service over ConnectRPC
+ *     (wired: `ConnectRpcEventSink` when `serviceUrl` is set, else `Noop`).
+ *     JobEvent / DatasetEvent emission remains TBD.
  *
  * When `spark.openlineage.disabled=true` the plugin short-circuits and registers
  * nothing. When `spark.openlineage.serviceUrl` is unset the plugin still registers
@@ -46,10 +47,10 @@ final class LineageDriverPlugin extends DriverPlugin with Logging {
         return Collections.emptyMap[String, String]()
       }
 
-      // Pick an event sink based on config. Real ConnectRPC emitter wiring is
-      // a follow-up todo; for now we keep the plugin wiring end-to-end testable
-      // via the Noop sink when no service URL is configured.
-      sink = buildSink(config)
+      // Pick an event sink based on config: a real ConnectRPC emitter
+      // (`ConnectRpcEventSink`) when `serviceUrl` is set, else the inert
+      // `EventSink.Noop`. See `LineageDriverPlugin.buildSink` for the policy.
+      sink = LineageDriverPlugin.buildSink(config)
 
       if (config.serviceUrl.isEmpty) {
         logWarning(
@@ -76,32 +77,6 @@ final class LineageDriverPlugin extends DriverPlugin with Logging {
   }
 
   /**
-   * Factory for the event sink. Isolated so tests can subclass the plugin and
-   * inject an in-memory sink without rebuilding the rest of `init`.
-   *
-   * Wiring policy:
-   *   - `serviceUrl` unset → `EventSink.Noop`. Plugin is loaded but inert.
-   *   - `serviceUrl` set   → `ConnectRpcEventSink` backed by a `LineageServiceClient`.
-   */
-  protected def buildSink(config: LineageConfig): EventSink = config.serviceUrl match {
-    case None => EventSink.Noop
-    case Some(url) =>
-      val token = config.authToken.getOrElse("valid-token")
-      val extraHeaders = Map("Authorization" -> s"Bearer $token")
-      val transport = new ConnectRpcClient(
-        baseUrl = url,
-        okHttp = ConnectRpcClient.defaultOkHttp(),
-        extraHeaders = extraHeaders
-      )
-      val svc       = new LineageServiceClient(transport)
-      new ConnectRpcEventSink(
-        client         = svc,
-        queueCapacity  = config.queueSize,
-        batchFlushMs   = config.batchFlushMs
-      )
-  }
-
-  /**
    * Attach the QueryExecutionListener to the active SparkSession's listener
    * manager. If no active session exists yet (possible if the plugin is loaded
    * before the user constructs a SparkSession), we fall back to attaching via
@@ -112,7 +87,7 @@ final class LineageDriverPlugin extends DriverPlugin with Logging {
     listener = new LineageQueryListener(
       config       = config,
       sparkConf    = sc.getConf,
-      eventBuilder = new RunEventBuilder(),
+      eventBuilder = new RunEventBuilder(jobFacets = config.jobFacets),
       sink         = sink,
       metrics      = metricsAggregator
     )
@@ -120,7 +95,7 @@ final class LineageDriverPlugin extends DriverPlugin with Logging {
     streamingListener = new LineageStreamingListener(
       config       = config,
       sparkConf    = sc.getConf,
-      eventBuilder = new RunEventBuilder(),
+      eventBuilder = new RunEventBuilder(jobFacets = config.jobFacets),
       sink         = sink
     )
 
@@ -165,6 +140,46 @@ final class LineageDriverPlugin extends DriverPlugin with Logging {
     metricsAggregator.clear()
     try sink.close() catch { case NonFatal(t) => logWarning("OpenLineage sink close failed", t) }
     logInfo("OpenLineage driver plugin shutting down")
+  }
+}
+
+object LineageDriverPlugin {
+
+  /**
+   * Factory for the event sink. Lives on the companion (the plugin class is
+   * `final`) so it can be unit-tested directly without a `SparkContext`.
+   *
+   * Wiring policy:
+   *   - `serviceUrl` unset → `EventSink.Noop`. Plugin is loaded but inert.
+   *   - `serviceUrl` set   → `ConnectRpcEventSink` backed by a
+   *     `LineageServiceClient`, over a TLS/mTLS-capable `ConnectRpcClient`.
+   */
+  def buildSink(config: LineageConfig): EventSink = config.serviceUrl match {
+    case None => EventSink.Noop
+    case Some(url) =>
+      val token = config.authToken.getOrElse("valid-token")
+      val extraHeaders = Map("Authorization" -> s"Bearer $token")
+      // Use the TLS/mTLS client when trust or key material is configured;
+      // otherwise the default client (plain http, or https against the JVM
+      // default trust store).
+      val okHttp =
+        if (config.tls.enabled) ConnectRpcClient.okHttpForTls(config.tls)
+        else ConnectRpcClient.defaultOkHttp()
+      val transport = new ConnectRpcClient(
+        baseUrl = url,
+        okHttp = okHttp,
+        extraHeaders = extraHeaders
+      )
+      val svc = new LineageServiceClient(transport)
+      new ConnectRpcEventSink(
+        client             = svc,
+        queueCapacity      = config.queueSize,
+        batchFlushMs       = config.batchFlushMs,
+        maxRetries         = config.retryMaxRetries,
+        retryBackoffMs     = config.retryBackoffMs,
+        jitterFactor       = config.retryJitterFactor,
+        minFlushIntervalMs = config.rateLimitMinIntervalMs
+      )
   }
 }
 
