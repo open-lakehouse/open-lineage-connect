@@ -18,6 +18,14 @@ ThisBuild / scalacOptions ++= Seq(
   "-Ywarn-numeric-widen"
 )
 
+// delta-spark 4.2.0 (and its delta-storage / delta-kernel-* siblings) is not
+// published to public Maven Central — the 4.1.x/4.2.x line ships through the
+// Databricks public Maven proxy, which also mirrors Central. Declare it as a
+// resolver so CI (and any clean checkout) can resolve the pinned Delta version
+// without a pre-seeded local cache. Central remains the default resolver; this
+// is consulted for artifacts Central doesn't carry.
+ThisBuild / resolvers += "databricks-maven-proxy" at "https://maven-proxy.cloud.databricks.com/"
+
 // Versions are pinned here so the whole plugin recompiles cleanly against one
 // Spark 4.1.x patch level. Bump deliberately and re-run the API audit
 // (see .cursor/plans/spark_openlineage_plugin_*.plan.md — todo `spark4-api-audit`).
