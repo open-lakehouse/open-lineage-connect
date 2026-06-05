@@ -71,12 +71,17 @@ final class QueryPlanVisitorSinksSpec
         Seq((1, 10.0), (2, 20.0)).toDF("id", "amount")
           .write.mode("overwrite").saveAsTable("sinks_db.orders")
 
-        // Walk backwards through captured plans to find the one that contains a
-        // sink — intermediate analysis steps may produce plans without one.
-        val sinks = firstNonEmptySinks(l)
+        // saveAsTable on a new managed table lowers to a
+        // CreateDataSourceTableAsSelectCommand (catalog identity sinks_db.orders)
+        // *and* a nested path-based warehouse write, and Spark's async listener
+        // bus can also deliver other queries' plans to this listener. So select
+        // the sink by its exact identity rather than by facet/count.
+        val s = eventually {
+          val orders = sinkByIdentity(l, "sinks_db", "orders")
+          orders shouldBe defined
+          orders.get
+        }
 
-        sinks should have size 1
-        val s = sinks.head
         s.namespace shouldBe "sinks_db"
         s.name      shouldBe "orders"
         s.facets.get("catalog") shouldBe Some("session")
@@ -124,10 +129,20 @@ final class QueryPlanVisitorSinksSpec
       withListener { l =>
         spark.sql("CREATE TABLE sinks_db.rollup USING PARQUET AS SELECT id, amount * 2 AS doubled FROM sinks_db.src_for_ctas")
 
-        val sinks = firstNonEmptySinks(l)
+        // A CTAS lowers to a CreateDataSourceTableAsSelectCommand (catalog
+        // identity sinks_db.rollup, tagged with a `ctas` facet) *and* a nested
+        // InsertIntoHadoopFsRelationCommand that writes to the warehouse path.
+        // Spark's async listener bus may also deliver other queries' plans to
+        // this listener (e.g. the seed write of sinks_db.src_for_ctas, which is
+        // itself a `ctas`-tagged CreateDataSourceTableAsSelectCommand). Select
+        // the sink by its exact identity so the assertion is independent of
+        // capture order and cross-query event delivery.
+        val s = eventually {
+          val rollup = sinkByIdentity(l, "sinks_db", "rollup")
+          rollup shouldBe defined
+          rollup.get
+        }
 
-        sinks should have size 1
-        val s = sinks.head
         s.name      shouldBe "rollup"
         s.namespace shouldBe "sinks_db"
         s.facets.get("ctas") orElse s.facets.get("writeKind") should not be empty
@@ -195,6 +210,16 @@ final class QueryPlanVisitorSinksSpec
    */
   private def firstNonEmptySinks(l: CapturingListener): Seq[DatasetRef] =
     QueryPlanVisitor.extractSinks(firstPlanWithSinks(l))
+
+  /**
+   * Find a sink with the exact `(namespace, name)` identity across *all* captured
+   * plans. Robust against capture order and against Spark's async listener bus
+   * delivering unrelated queries' plans (seeds, prior tests) to this listener.
+   */
+  private def sinkByIdentity(l: CapturingListener, namespace: String, name: String): Option[DatasetRef] =
+    l.captured.toList
+      .flatMap(QueryPlanVisitor.extractSinks)
+      .find(d => d.namespace == namespace && d.name == name)
 
   private def firstPlanWithSinks(l: CapturingListener): org.apache.spark.sql.catalyst.plans.logical.LogicalPlan =
     l.captured.reverseIterator
