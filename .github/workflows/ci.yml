@@ -40,6 +40,12 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+      # crates/table-service/build.rs runs connectrpc-build, which shells out to
+      # `protoc`. buf-setup only provides `buf`, so install protoc explicitly or
+      # the build script panics with "failed to spawn protoc".
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: cargo test
         run: make rust-test
 
