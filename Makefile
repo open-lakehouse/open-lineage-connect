@@ -6,7 +6,7 @@ IMAGE_TAG          ?= latest
         docker-build docker-run \
         proto-export rust-build rust-test \
         docker-build-table docker-compose-up docker-compose-down \
-        spark-plugin-build spark-plugin-test spark-plugin-clean
+        spark-plugin-build spark-plugin-test spark-plugin-clean spark-connect-e2e
 
 generate:
 	buf generate
@@ -63,6 +63,12 @@ spark-plugin-test:
 
 spark-plugin-clean:
 	cd spark-openlineage-plugin && sbt clean
+
+# True Spark Connect server end-to-end: boots a real Connect server with the
+# plugin and drives it from a remote session. Heavier than `spark-plugin-test`;
+# requires java 17, python3, sbt, and $SPARK_HOME (or network to download Spark).
+spark-connect-e2e:
+	./scripts/spark-connect-e2e.sh
 
 clean:
 	rm -rf services/lineage/gen services/lineage/coverage.out crates/table-service/proto-export

@@ -229,6 +229,45 @@ final class LineageQueryListenerSpec extends AnyFunSuite with SparkTestBase with
     } finally spark.listenerManager.unregister(listener)
   }
 
+  test("configured runFacets are injected onto emitted run events") {
+    val (sink, listener) = attachListener(baseConfig.copy(runFacets = Map("owner" -> "data-eng")))
+    try {
+      val ss = spark
+      import ss.implicits._
+      val out = tmpDir.resolve("run-facets-out").toString
+      Seq((1, "a"), (2, "b")).toDF("i", "s").write.mode("overwrite").parquet(out)
+
+      eventually {
+        val events = sink.events
+        withClue(s"captured event types=${events.map(_.getEventType)}") {
+          events should not be empty
+        }
+        // Every emitted event should carry the operator-supplied facet.
+        events.foreach { e =>
+          e.getRun.getFacets.getFieldsOrThrow("owner").getStringValue shouldBe "data-eng"
+        }
+      }
+    } finally spark.listenerManager.unregister(listener)
+  }
+
+  test("built-in run facets win over a colliding operator-supplied facet") {
+    val (sink, listener) = attachListener(baseConfig.copy(runFacets = Map("producer" -> "operator-override")))
+    try {
+      val ss = spark
+      import ss.implicits._
+      val out = tmpDir.resolve("run-facets-collide-out").toString
+      Seq((1, "a")).toDF("i", "s").write.mode("overwrite").parquet(out)
+
+      eventually {
+        val events = sink.events
+        events should not be empty
+        events.foreach { e =>
+          e.getRun.getFacets.getFieldsOrThrow("producer").getStringValue shouldBe "spark-openlineage-plugin"
+        }
+      }
+    } finally spark.listenerManager.unregister(listener)
+  }
+
   test("disabled config short-circuits without emitting anything") {
     val (sink, listener) = attachListener(baseConfig.copy(disabled = true))
     try {

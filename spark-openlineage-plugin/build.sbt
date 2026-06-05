@@ -27,7 +27,7 @@ val connectKotlinVersion  = "0.7.2"     // connect-kotlin-okhttp (Java-callable 
 // Generated Java proto classes from buf.build/protocolbuffers/java use the
 // protobuf-java 4.x "GeneratedFile" runtime API (RuntimeVersion validation).
 // Must stay aligned with the --protobuf_java_version the buf remote plugin targets.
-val protobufVersion       = "4.34.1"
+val protobufVersion       = "4.35.0"
 // protovalidate-java provides build.buf.validate.* classes referenced by our
 // generated Lineage.java (the proto has buf.validate.field annotations).
 val protovalidateVersion  = "0.7.0"
@@ -77,7 +77,11 @@ lazy val root = (project in file("."))
       "org.apache.spark"     %% "spark-sql"            % sparkVersion     % Test classifier "tests",
       // MockWebServer gives us a real local HTTP server in tests so we exercise
       // the full Connect wire format (headers + proto body) without mocking OkHttp.
-      "com.squareup.okhttp3" % "mockwebserver"         % okhttpVersion    % Test
+      "com.squareup.okhttp3" % "mockwebserver"         % okhttpVersion    % Test,
+      // okhttp-tls provides HeldCertificate / HandshakeCertificates so the TLS
+      // handshake test can mint a self-signed cert in-memory and stand up an
+      // HTTPS MockWebServer without external key material.
+      "com.squareup.okhttp3" % "okhttp-tls"            % okhttpVersion    % Test
     ),
 
     // Shading is non-optional. Spark 4 still bundles its own protobuf-java, and

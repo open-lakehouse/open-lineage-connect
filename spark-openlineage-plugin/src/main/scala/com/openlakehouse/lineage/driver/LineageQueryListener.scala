@@ -62,6 +62,9 @@ private[lineage] final class LineageQueryListener(
       val executionId = try Some(qe.id) catch { case NonFatal(_) => None }
 
       val baseFacets = Map.newBuilder[String, String]
+      // Operator-supplied run facets first, so the built-in facets below win
+      // on any key collision.
+      config.runFacets.foreach { case (k, v) => baseFacets += k -> v }
       baseFacets += "funcName"        -> funcName
       baseFacets += "producer"        -> "spark-openlineage-plugin"
       durationNs.foreach(d => baseFacets += "durationNs" -> d.toString)

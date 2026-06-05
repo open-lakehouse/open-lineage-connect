@@ -1,7 +1,7 @@
 package com.openlakehouse.lineage.transport
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
-import java.util.concurrent.{ArrayBlockingQueue, TimeUnit}
+import java.util.concurrent.{ArrayBlockingQueue, ThreadLocalRandom, TimeUnit}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success}
@@ -34,11 +34,18 @@ import lineage.v1.Lineage
  *
  * ### Retry policy
  *
- * Retries are intentionally modest (a couple of attempts with short fixed
- * backoff). The lineage service is downstream-of-record and we expect it to
- * be mostly available; persistent outages should be surfaced via the Spark
- * driver's logs, not papered over with aggressive retries that pressure the
- * queue.
+ * Retries are intentionally modest (a couple of attempts with short backoff).
+ * The backoff is exponential and, when `jitterFactor > 0`, jittered to avoid a
+ * thundering herd of drivers retrying in lockstep against a recovering service.
+ * The lineage service is downstream-of-record and we expect it to be mostly
+ * available; persistent outages should be surfaced via the Spark driver's logs,
+ * not papered over with aggressive retries that pressure the queue.
+ *
+ * ### Rate limiting
+ *
+ * When `minFlushIntervalMs > 0` the worker spaces successive flushes to the
+ * (single) lineage endpoint by at least that interval, smoothing bursts so a
+ * large backlog can't hammer the service.
  */
 final class ConnectRpcEventSink(
     client: LineageServiceClient,
@@ -48,11 +55,19 @@ final class ConnectRpcEventSink(
     shutdownDrainMs: Long   = 5000L,
     maxRetries: Int         = 2,
     retryBackoffMs: Long    = 200L,
-    threadNamePrefix: String = "openlineage-emitter"
+    jitterFactor: Double    = 0.0,
+    minFlushIntervalMs: Long = 0L,
+    threadNamePrefix: String = "openlineage-emitter",
+    // Seams for deterministic tests; production uses the defaults.
+    rng: () => Double        = () => ThreadLocalRandom.current().nextDouble(),
+    sleeper: Long => Unit    = ms => Thread.sleep(ms),
+    nanoClock: () => Long    = () => System.nanoTime()
 ) extends EventSink {
 
   require(queueCapacity > 0, "queueCapacity must be > 0")
   require(batchMaxEvents > 0, "batchMaxEvents must be > 0")
+
+  private val rateLimiter = new RateLimiter(minFlushIntervalMs, nanoClock, sleeper)
 
   // Use SLF4J directly rather than Spark's `Logging` trait. The trait eagerly
   // initializes Log4j2 via `LogManager.<clinit>` on first log call, which
@@ -170,6 +185,9 @@ final class ConnectRpcEventSink(
 
   private def flushBatch(batch: Seq[Lineage.RunEvent]): Unit = {
     if (batch.isEmpty) return
+    // Space successive flushes to the single lineage endpoint (no-op unless
+    // minFlushIntervalMs > 0).
+    rateLimiter.acquire()
     var attempt   = 0
     var lastError: Throwable = null
 
@@ -187,7 +205,7 @@ final class ConnectRpcEventSink(
         case Failure(t: ConnectRpcException) if t.isRetriable && attempt < maxRetries =>
           lastError = t
           attempt += 1
-          sleepQuietly(retryBackoffMs * (1L << (attempt - 1)))
+          sleepQuietly(RetryBackoff.compute(retryBackoffMs, attempt, jitterFactor, rng))
         case Failure(t) =>
           failed.addAndGet(batch.size.toLong)
           logger.warn(
@@ -208,6 +226,6 @@ final class ConnectRpcEventSink(
   }
 
   private def sleepQuietly(ms: Long): Unit =
-    try Thread.sleep(ms)
+    try sleeper(ms)
     catch { case _: InterruptedException => Thread.currentThread().interrupt() }
 }

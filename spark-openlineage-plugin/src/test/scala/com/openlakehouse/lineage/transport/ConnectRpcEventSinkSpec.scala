@@ -2,6 +2,7 @@ package com.openlakehouse.lineage.transport
 
 import java.util.concurrent.TimeUnit
 
+import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
 import okhttp3.mockwebserver.{MockResponse, MockWebServer}
@@ -167,6 +168,41 @@ final class ConnectRpcEventSinkSpec extends AnyFunSuite with BeforeAndAfterEach 
     Thread.sleep(150L)
     server.getRequestCount shouldBe 1
     s.failedCount shouldBe 1L
+  }
+
+  test("retry backoff is computed via the jittered schedule and injected sleeper") {
+    server.enqueue(new MockResponse().setResponseCode(503).setBody("unavailable"))
+    server.enqueue(successResponse(ingested = 1))
+
+    val slept = ListBuffer.empty[Long]
+    val transport = new ConnectRpcClient(
+      baseUrl = server.url("/").toString.stripSuffix("/"),
+      okHttp  = ConnectRpcClient.defaultOkHttp(connectTimeoutMs = 500L, readTimeoutMs = 1500L)
+    )
+    // jitterFactor 0.5 + rng 0.5 → first retry delay == base (100). The
+    // injected sleeper records the delay instead of actually sleeping.
+    sink = new ConnectRpcEventSink(
+      client         = new LineageServiceClient(transport),
+      queueCapacity  = 16,
+      batchMaxEvents = 8,
+      batchFlushMs   = 20L,
+      shutdownDrainMs = 2000L,
+      maxRetries     = 2,
+      retryBackoffMs = 100L,
+      jitterFactor   = 0.5,
+      rng            = () => 0.5,
+      sleeper        = ms => slept += ms
+    )
+
+    sink.send(runEvent("r-1"))
+
+    server.takeRequest(3, TimeUnit.SECONDS) should not be null
+    server.takeRequest(3, TimeUnit.SECONDS) should not be null
+    Thread.sleep(150L)
+
+    sink.sentCount shouldBe 1L
+    sink.failedCount shouldBe 0L
+    slept.toList shouldBe List(100L)
   }
 
   test("close() drains pending events through the worker before returning") {

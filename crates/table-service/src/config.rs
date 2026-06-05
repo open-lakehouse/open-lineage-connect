@@ -47,7 +47,8 @@ pub struct IcebergConfig {
     /// table.
     pub partition_cols: Vec<String>,
     /// Optional bearer token to attach to REST requests (Lakekeeper OIDC).
-    /// Currently unused — wired through for follow-up.
+    /// Forwarded to the catalog as the REST `token` property by
+    /// `iceberg::build_rest_props` (sourced from the `ICEBERG_TOKEN` env var).
     pub token: Option<String>,
 }
 

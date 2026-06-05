@@ -1,12 +1,25 @@
 package com.openlakehouse.lineage.transport
 
-import java.io.IOException
+import java.io.{FileInputStream, IOException}
+import java.security.KeyStore
 import java.util.concurrent.TimeUnit
+
+import javax.net.ssl.{
+  KeyManager,
+  KeyManagerFactory,
+  SSLContext,
+  SSLSocketFactory,
+  TrustManager,
+  TrustManagerFactory,
+  X509TrustManager
+}
 
 import scala.util.{Failure, Success, Try}
 
 import com.google.protobuf.{Message, Parser}
 import okhttp3.{Headers, MediaType, OkHttpClient, Request, RequestBody, Response}
+
+import com.openlakehouse.lineage.TlsConfig
 
 /**
  * Minimal ConnectRPC unary-over-HTTP client backed by OkHttp.
@@ -133,6 +146,72 @@ object ConnectRpcClient {
       .writeTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)
       .retryOnConnectionFailure(true)
       .build()
+
+  /**
+   * OkHttp client configured for TLS / mTLS from a [[TlsConfig]].
+   *
+   *   - A custom trust store (when set) replaces the JVM default trust anchors,
+   *     letting the driver pin a private-CA or self-signed lineage-service cert.
+   *   - A key store (when set) supplies a client certificate for mutual TLS.
+   *
+   * Timeouts mirror [[defaultOkHttp]] so the driver-protection guarantees are
+   * identical on the secure path.
+   */
+  def okHttpForTls(
+      tls: TlsConfig,
+      connectTimeoutMs: Long = 2000L,
+      readTimeoutMs: Long = 5000L
+  ): OkHttpClient = {
+    val (socketFactory, trustManager) = buildSslSocketFactory(tls)
+    new OkHttpClient.Builder()
+      .connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS)
+      .readTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)
+      .writeTimeout(readTimeoutMs, TimeUnit.MILLISECONDS)
+      .retryOnConnectionFailure(true)
+      .sslSocketFactory(socketFactory, trustManager)
+      .build()
+  }
+
+  /**
+   * Build an `SSLSocketFactory` plus the `X509TrustManager` OkHttp needs to be
+   * handed alongside it. Exposed at package level so transport tests can assert
+   * the handshake end-to-end.
+   */
+  private[transport] def buildSslSocketFactory(tls: TlsConfig): (SSLSocketFactory, X509TrustManager) = {
+    val trustManagers = loadTrustManagers(tls)
+    val keyManagers   = loadKeyManagers(tls)
+    val ctx           = SSLContext.getInstance("TLS")
+    ctx.init(keyManagers, trustManagers, null)
+    val x509 = trustManagers.collectFirst { case tm: X509TrustManager => tm }
+      .getOrElse(throw new IllegalStateException("no X509TrustManager produced for TLS config"))
+    (ctx.getSocketFactory, x509)
+  }
+
+  private def loadTrustManagers(tls: TlsConfig): Array[TrustManager] = {
+    val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
+    tls.trustStorePath match {
+      case Some(path) => tmf.init(loadKeyStore(path, tls.trustStorePassword, tls.trustStoreType))
+      case None       => tmf.init(null: KeyStore) // JVM default trust anchors
+    }
+    tmf.getTrustManagers
+  }
+
+  private def loadKeyManagers(tls: TlsConfig): Array[KeyManager] = tls.keyStorePath match {
+    case None => null // no client certificate → one-way TLS
+    case Some(path) =>
+      val ks  = loadKeyStore(path, tls.keyStorePassword, tls.keyStoreType)
+      val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
+      kmf.init(ks, tls.keyStorePassword.map(_.toCharArray).orNull)
+      kmf.getKeyManagers
+  }
+
+  private def loadKeyStore(path: String, password: Option[String], storeType: String): KeyStore = {
+    val ks = KeyStore.getInstance(storeType)
+    val in = new FileInputStream(path)
+    try ks.load(in, password.map(_.toCharArray).orNull)
+    finally in.close()
+    ks
+  }
 }
 
 /**

@@ -79,7 +79,9 @@ final class LineageStreamingListener(
     safely {
       val runUuid = event.runId
       val job     = JobRef(config.namespace, sanitiseJobName(Option(event.name).getOrElse(event.id.toString)))
-      val facets  = Map(
+      // Operator-supplied run facets first, so the built-in streaming facets
+      // below win on any key collision.
+      val facets  = config.runFacets ++ Map(
         "streamingQueryId"   -> event.id.toString,
         "streamingQueryName" -> Option(event.name).getOrElse(""),
         "startedAt"          -> Option(event.timestamp).getOrElse(""),

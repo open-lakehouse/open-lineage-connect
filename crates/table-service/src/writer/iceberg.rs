@@ -52,20 +52,8 @@ impl IcebergSink {
     /// Polaris, Tabular, ...). The catalog is loaded eagerly so any
     /// connectivity / configuration error surfaces at startup.
     pub async fn from_config(cfg: &IcebergConfig) -> Result<Self, IcebergSinkError> {
-        let mut props = HashMap::new();
-        props.insert(REST_CATALOG_PROP_URI.to_string(), cfg.catalog_uri.clone());
-        props.insert(
-            REST_CATALOG_PROP_WAREHOUSE.to_string(),
-            cfg.warehouse.clone(),
-        );
-        if let Some(token) = cfg.token.as_ref() {
-            // Standard Iceberg REST property name; the Lakekeeper REST catalog
-            // honours it as a Bearer auth token. Wired through but not yet
-            // covered by tests — see follow-up note in AGENTS.md.
-            props.insert("token".to_string(), token.clone());
-        }
         let catalog = RestCatalogBuilder::default()
-            .load("rest", props)
+            .load("rest", build_rest_props(cfg))
             .await
             .map_err(IcebergSinkError::from)?;
         Self::with_catalog(
@@ -464,6 +452,28 @@ fn is_already_exists(e: &iceberg::Error) -> bool {
     false
 }
 
+/// Build the REST catalog property map from an [`IcebergConfig`].
+///
+/// Pulled out of `from_config` so the property wiring (URI, warehouse, and the
+/// optional bearer `token`) can be asserted in a unit test without standing up
+/// a real REST catalog.
+pub(crate) fn build_rest_props(cfg: &IcebergConfig) -> HashMap<String, String> {
+    let mut props = HashMap::new();
+    props.insert(REST_CATALOG_PROP_URI.to_string(), cfg.catalog_uri.clone());
+    props.insert(
+        REST_CATALOG_PROP_WAREHOUSE.to_string(),
+        cfg.warehouse.clone(),
+    );
+    if let Some(token) = cfg.token.as_ref() {
+        // Standard Iceberg REST property name; the Lakekeeper REST catalog
+        // honours it as a Bearer auth token. Covered by `build_rest_props_*`
+        // unit tests; exercised against a live Lakekeeper by the `#[ignore]`d
+        // `iceberg_integration_test::auth_*` tests.
+        props.insert("token".to_string(), token.clone());
+    }
+    props
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -740,6 +750,49 @@ mod tests {
         assert!(
             msg.contains("does_not_exist"),
             "error should mention the missing column, got: {msg}",
+        );
+    }
+
+    fn iceberg_config(token: Option<&str>) -> IcebergConfig {
+        IcebergConfig {
+            catalog_uri: "http://lakekeeper:8181/catalog".into(),
+            warehouse: "lineage".into(),
+            namespace: "lineage".into(),
+            table: "events".into(),
+            partition_cols: vec!["event_kind".into()],
+            token: token.map(|t| t.to_string()),
+        }
+    }
+
+    #[test]
+    fn build_rest_props_sets_uri_and_warehouse() {
+        let props = build_rest_props(&iceberg_config(None));
+        assert_eq!(
+            props.get(REST_CATALOG_PROP_URI).map(String::as_str),
+            Some("http://lakekeeper:8181/catalog"),
+        );
+        assert_eq!(
+            props.get(REST_CATALOG_PROP_WAREHOUSE).map(String::as_str),
+            Some("lineage"),
+        );
+    }
+
+    #[test]
+    fn build_rest_props_omits_token_when_absent() {
+        let props = build_rest_props(&iceberg_config(None));
+        assert!(
+            !props.contains_key("token"),
+            "no `token` property should be set when the config token is None",
+        );
+    }
+
+    #[test]
+    fn build_rest_props_sets_token_when_present() {
+        let props = build_rest_props(&iceberg_config(Some("secret-bearer")));
+        assert_eq!(
+            props.get("token").map(String::as_str),
+            Some("secret-bearer"),
+            "the bearer token must be forwarded under the REST `token` property",
         );
     }
 }
