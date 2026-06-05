@@ -71,12 +71,21 @@ final class QueryPlanVisitorSinksSpec
         Seq((1, 10.0), (2, 20.0)).toDF("id", "amount")
           .write.mode("overwrite").saveAsTable("sinks_db.orders")
 
-        // Walk backwards through captured plans to find the one that contains a
-        // sink — intermediate analysis steps may produce plans without one.
-        val sinks = firstNonEmptySinks(l)
+        // saveAsTable on a new managed table lowers to a
+        // CreateDataSourceTableAsSelectCommand (catalog identity, `catalog`
+        // facet = "session") *and* a nested path-based warehouse write. Capture
+        // order between the two is timing-dependent, so select the
+        // catalog-identity sink explicitly instead of trusting capture order.
+        val s = eventually {
+          val catalogSinks = DatasetRef.distinctByIdentity(
+            l.captured.toList
+              .flatMap(QueryPlanVisitor.extractSinks)
+              .filter(_.facets.get("catalog").contains("session"))
+          )
+          catalogSinks should have size 1
+          catalogSinks.head
+        }
 
-        sinks should have size 1
-        val s = sinks.head
         s.namespace shouldBe "sinks_db"
         s.name      shouldBe "orders"
         s.facets.get("catalog") shouldBe Some("session")
@@ -124,10 +133,22 @@ final class QueryPlanVisitorSinksSpec
       withListener { l =>
         spark.sql("CREATE TABLE sinks_db.rollup USING PARQUET AS SELECT id, amount * 2 AS doubled FROM sinks_db.src_for_ctas")
 
-        val sinks = firstNonEmptySinks(l)
+        // A CTAS lowers to a CreateDataSourceTableAsSelectCommand (catalog
+        // identity `sinks_db.rollup`, tagged with a `ctas` facet) *and* a nested
+        // InsertIntoHadoopFsRelationCommand that writes to the warehouse path.
+        // Both are legitimate sinks, and which analyzed plan the listener reports
+        // last is timing-dependent — so select the catalog-identity sink by its
+        // `ctas` facet rather than relying on `firstNonEmptySinks` capture order.
+        val s = eventually {
+          val ctasSinks = DatasetRef.distinctByIdentity(
+            l.captured.toList
+              .flatMap(QueryPlanVisitor.extractSinks)
+              .filter(_.facets.get("ctas").contains("true"))
+          )
+          ctasSinks should have size 1
+          ctasSinks.head
+        }
 
-        sinks should have size 1
-        val s = sinks.head
         s.name      shouldBe "rollup"
         s.namespace shouldBe "sinks_db"
         s.facets.get("ctas") orElse s.facets.get("writeKind") should not be empty
