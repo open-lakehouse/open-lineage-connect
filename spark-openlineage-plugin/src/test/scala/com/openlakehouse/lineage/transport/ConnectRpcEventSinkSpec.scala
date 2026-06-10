@@ -206,19 +206,29 @@ final class ConnectRpcEventSinkSpec extends AnyFunSuite with BeforeAndAfterEach 
   }
 
   test("close() drains pending events through the worker before returning") {
-    server.enqueue(successResponse(ingested = 3))
+    // The worker pulls the first queued event as soon as it appears, so with a
+    // short flush interval the three sends can legitimately land across more
+    // than one batch. The guarantee under test is that close() drains *all*
+    // pending events — not that they arrive in a single request — so enqueue a
+    // response per worst-case batch and sum the events the server actually saw.
+    (1 to 3).foreach(_ => server.enqueue(successResponse(ingested = 1)))
 
-    // Short batchFlushMs so the worker finishes quickly on its own once
-    // running=false; close() just waits for the natural exit.
     val s = newSink(batchFlushMs = 20L)
     (1 to 3).foreach(i => s.send(runEvent(s"r-$i")))
 
     s.close()
 
-    val recorded = server.takeRequest(3, TimeUnit.SECONDS)
+    var totalEvents = 0
+    var recorded    = server.takeRequest(3, TimeUnit.SECONDS)
     recorded should not be null
-    Lineage.IngestBatchRequest.parseFrom(recorded.getBody.readByteArray())
-      .getEventsCount shouldBe 3
+    while (recorded != null && totalEvents < 3) {
+      totalEvents += Lineage.IngestBatchRequest
+        .parseFrom(recorded.getBody.readByteArray())
+        .getEventsCount
+      recorded = if (totalEvents < 3) server.takeRequest(1, TimeUnit.SECONDS) else null
+    }
+
+    totalEvents shouldBe 3
     s.sentCount shouldBe 3L
   }
 }

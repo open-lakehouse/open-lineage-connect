@@ -222,7 +222,15 @@ final class QueryPlanVisitorSinksSpec
       .find(d => d.namespace == namespace && d.name == name)
 
   private def firstPlanWithSinks(l: CapturingListener): org.apache.spark.sql.catalyst.plans.logical.LogicalPlan =
-    l.captured.reverseIterator
-      .find(p => QueryPlanVisitor.extractSinks(p).nonEmpty)
-      .getOrElse(l.latest)
+    // Spark delivers `QueryExecutionListener` callbacks asynchronously on the
+    // listener bus, so the captured buffer may still be empty (or not yet hold
+    // a sink-bearing plan) the instant after a write returns. Poll until one
+    // shows up rather than calling `.last` on a possibly-empty buffer, which
+    // would throw `NoSuchElementException` and flake under a busy CI runner.
+    eventually {
+      val plans = l.captured.synchronized(l.captured.toList)
+      plans.reverseIterator
+        .find(p => QueryPlanVisitor.extractSinks(p).nonEmpty)
+        .getOrElse(throw new NoSuchElementException("no captured plan with sinks yet"))
+    }
 }
