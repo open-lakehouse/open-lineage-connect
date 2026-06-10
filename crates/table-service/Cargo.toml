@@ -5,20 +5,27 @@ edition = "2024"
 rust-version = "1.88"
 
 [dependencies]
-connectrpc = { version = "0.2", features = ["axum", "client", "server"] }
-buffa = { version = "0.2", features = ["json"] }
-buffa-types = { version = "0.2", features = ["json"] }
-deltalake = { version = "0.28", features = ["s3", "datafusion"] }
-# Iceberg 0.7.x is the last release that pins arrow/parquet 55.x, matching the
-# version pulled in by `deltalake` 0.28. Bumping iceberg to >=0.8 also requires
-# bumping deltalake (or vendoring an arrow conversion bridge).
-iceberg = "0.7"
-iceberg-catalog-rest = "0.7"
-parquet = "55"
+# connectrpc is capped at 0.6.x by the crates mirror, and connectrpc 0.6
+# pins `buffa`/`buffa-types` to `^0.6` — so the buffa family is held at 0.6
+# to stay in lockstep with the generated connect code.
+connectrpc = { version = "0.6", features = ["axum", "client", "server"] }
+buffa = { version = "0.6", features = ["json"] }
+buffa-types = { version = "0.6", features = ["json"] }
+# deltalake is held at 0.31.x (arrow/parquet 57.x) rather than the latest
+# 0.32.x (arrow/parquet 58.x) so it stays on the same arrow major as
+# `iceberg`. The iceberg sink consumes `deltalake::arrow` RecordBatch values
+# directly, so both crates must resolve to one arrow major. The newest
+# iceberg release (0.9) is still on arrow 57, so 57 is the highest line where
+# both sinks compile together. Bump deltalake to 0.32 only once iceberg ships
+# an arrow-58 release.
+deltalake = { version = "0.31.1", features = ["s3", "datafusion"] }
+iceberg = "0.9"
+iceberg-catalog-rest = "0.9"
+parquet = "57"
 async-trait = "0.1"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
-axum = "0.7"
+axum = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 http-body = "1"
@@ -30,4 +37,4 @@ futures = "0.3"
 tempfile = "3"
 
 [build-dependencies]
-connectrpc-build = "0.2"
+connectrpc-build = "0.6"

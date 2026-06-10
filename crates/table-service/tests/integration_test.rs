@@ -3,7 +3,7 @@ use std::sync::Arc;
 use buffa::Message;
 use deltalake::arrow::array::StringArray;
 use deltalake::arrow::datatypes::DataType;
-use deltalake::DeltaTableBuilder;
+use deltalake::{DeltaTableBuilder, ensure_table_uri};
 
 use table_service::config::{Config, DeltaConfig};
 use table_service::lineage::v1::{
@@ -83,7 +83,8 @@ async fn test_delta_writer_create_and_append() {
     writer.append(batch).await.unwrap();
 
     // Verify the table was created and has version 1.
-    let mut table = DeltaTableBuilder::from_uri(tmp.path().to_str().unwrap())
+    let mut table = DeltaTableBuilder::from_url(ensure_table_uri(tmp.path().to_str().unwrap()).unwrap())
+        .unwrap()
         .build()
         .unwrap();
     table.load().await.unwrap();
@@ -296,7 +297,8 @@ async fn test_delta_writer_round_trip_with_column_lineage() {
 
     writer.append(batch).await.unwrap();
 
-    let mut table = DeltaTableBuilder::from_uri(tmp.path().to_str().unwrap())
+    let mut table = DeltaTableBuilder::from_url(ensure_table_uri(tmp.path().to_str().unwrap()).unwrap())
+        .unwrap()
         .build()
         .unwrap();
     table.load().await.unwrap();
@@ -339,7 +341,8 @@ async fn test_delta_writer_multiple_appends() {
     writer.append(make_batch("run", "p1")).await.unwrap();
     writer.append(make_batch("job", "p2")).await.unwrap();
 
-    let mut table = DeltaTableBuilder::from_uri(tmp.path().to_str().unwrap())
+    let mut table = DeltaTableBuilder::from_url(ensure_table_uri(tmp.path().to_str().unwrap()).unwrap())
+        .unwrap()
         .build()
         .unwrap();
     table.load().await.unwrap();

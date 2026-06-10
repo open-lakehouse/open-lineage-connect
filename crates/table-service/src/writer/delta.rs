@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use deltalake::arrow::array::RecordBatch;
 use deltalake::protocol::SaveMode;
-use deltalake::{DeltaOps, DeltaTable, DeltaTableBuilder};
+use deltalake::{DeltaTable, DeltaTableBuilder, ensure_table_uri};
 
 use crate::config::Config;
 use crate::writer::sink::{SinkError, TableSink};
@@ -37,9 +37,7 @@ impl DeltaWriter {
         }
 
         let table = self.open_or_create_table().await?;
-        let mut write_op = DeltaOps(table)
-            .write(vec![batch])
-            .with_save_mode(SaveMode::Append);
+        let mut write_op = table.write(vec![batch]).with_save_mode(SaveMode::Append);
 
         if !self.partition_cols.is_empty() {
             write_op = write_op.with_partition_columns(self.partition_cols.clone());
@@ -53,29 +51,19 @@ impl DeltaWriter {
     }
 
     async fn open_or_create_table(&self) -> Result<DeltaTable, DeltaWriteError> {
-        let builder = DeltaTableBuilder::from_uri(&self.table_uri)
-            .with_storage_options(self.storage_options.clone());
+        let table_url =
+            ensure_table_uri(&self.table_uri).map_err(|e| DeltaWriteError::Create(e.to_string()))?;
+        let mut table = DeltaTableBuilder::from_url(table_url)
+            .map_err(|e| DeltaWriteError::Create(e.to_string()))?
+            .with_storage_options(self.storage_options.clone())
+            .build()
+            .map_err(|e| DeltaWriteError::Create(e.to_string()))?;
 
-        match builder.build() {
-            Ok(mut table) => {
-                if table.load().await.is_ok() {
-                    return Ok(table);
-                }
-                self.create_empty_table().await
-            }
-            Err(_) => self.create_empty_table().await,
-        }
-    }
-
-    async fn create_empty_table(&self) -> Result<DeltaTable, DeltaWriteError> {
-        let table = DeltaOps::try_from_uri_with_storage_options(
-            &self.table_uri,
-            self.storage_options.clone(),
-        )
-        .await
-        .map_err(|e| DeltaWriteError::Create(e.to_string()))?;
-
-        Ok(table.0)
+        // Best-effort load of the existing log. A missing table is fine: the
+        // append `WriteBuilder` creates it on first write, preserving the old
+        // open-or-create semantics.
+        let _ = table.load().await;
+        Ok(table)
     }
 }
 
