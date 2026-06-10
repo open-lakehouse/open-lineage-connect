@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use buffa::OwnedView;
-use connectrpc::{ConnectError, Context};
+use connectrpc::{ConnectError, RequestContext, Response, ServiceResult};
 
 use crate::lineage::v1::OpenLineageEventView;
 use crate::table::v1::{
@@ -25,12 +25,16 @@ impl TableWriterServiceImpl {
     }
 }
 
+// Each handler returns a concrete `ServiceResult<…Response>`, which refines
+// the trait's `impl Encodable<…>` return to the specific response type. That
+// refinement is intentional, so opt out of the `refining_impl_trait` lint.
+#[allow(refining_impl_trait)]
 impl TableWriterService for TableWriterServiceImpl {
     async fn write_event(
         &self,
-        ctx: Context,
+        _ctx: RequestContext,
         request: OwnedView<WriteEventRequestView<'static>>,
-    ) -> Result<(WriteEventResponse, Context), ConnectError> {
+    ) -> ServiceResult<WriteEventResponse> {
         if !request.event.is_set() {
             return Err(ConnectError::invalid_argument("event is required"));
         }
@@ -46,29 +50,23 @@ impl TableWriterService for TableWriterServiceImpl {
             })?;
         }
 
-        Ok((
-            WriteEventResponse {
-                status: "ok".into(),
-                ..Default::default()
-            },
-            ctx,
-        ))
+        Ok(Response::new(WriteEventResponse {
+            status: "ok".into(),
+            ..Default::default()
+        }))
     }
 
     async fn write_batch(
         &self,
-        ctx: Context,
+        _ctx: RequestContext,
         request: OwnedView<WriteBatchRequestView<'static>>,
-    ) -> Result<(WriteBatchResponse, Context), ConnectError> {
+    ) -> ServiceResult<WriteBatchResponse> {
         if request.events.is_empty() {
-            return Ok((
-                WriteBatchResponse {
-                    status: "ok".into(),
-                    written: 0,
-                    ..Default::default()
-                },
-                ctx,
-            ));
+            return Ok(Response::new(WriteBatchResponse {
+                status: "ok".into(),
+                written: 0,
+                ..Default::default()
+            }));
         }
 
         let batch = events_to_record_batch(&request.events)
@@ -83,13 +81,10 @@ impl TableWriterService for TableWriterServiceImpl {
             })?;
         }
 
-        Ok((
-            WriteBatchResponse {
-                status: "ok".into(),
-                written: count,
-                ..Default::default()
-            },
-            ctx,
-        ))
+        Ok(Response::new(WriteBatchResponse {
+            status: "ok".into(),
+            written: count,
+            ..Default::default()
+        }))
     }
 }

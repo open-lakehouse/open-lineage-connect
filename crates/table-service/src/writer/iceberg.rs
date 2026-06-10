@@ -25,6 +25,7 @@ use iceberg::writer::file_writer::ParquetWriterBuilder;
 use iceberg::writer::file_writer::location_generator::{
     DefaultFileNameGenerator, DefaultLocationGenerator,
 };
+use iceberg::writer::file_writer::rolling_writer::RollingFileWriterBuilder;
 use iceberg::writer::{IcebergWriter, IcebergWriterBuilder};
 use iceberg::{
     Catalog, CatalogBuilder, ErrorKind, NamespaceIdent, TableCreation, TableIdent,
@@ -265,28 +266,32 @@ impl IcebergSink {
         );
 
         let partition_spec = table.metadata().default_partition_spec();
-        let partition_key = partition_struct.clone().map(|s| {
+        let partition_key = partition_struct.map(|s| {
             PartitionKey::new(
                 partition_spec.as_ref().clone(),
                 table.metadata().current_schema().clone(),
                 s,
             )
         });
+
+        // iceberg 0.9 reshaped the writer stack: the Parquet writer builder now
+        // only takes (properties, schema); file placement moved into a
+        // `RollingFileWriterBuilder` (location + file-name generators), and the
+        // partition key is supplied to `build(...)` rather than baked into the
+        // Parquet/data-file builders.
         let parquet_builder = ParquetWriterBuilder::new(
             WriterProperties::default(),
             table.metadata().current_schema().clone(),
-            partition_key,
+        );
+        let rolling_builder = RollingFileWriterBuilder::new_with_default_file_size(
+            parquet_builder,
             table.file_io().clone(),
             location_generator,
             file_name_generator,
         );
-        let data_file_builder = DataFileWriterBuilder::new(
-            parquet_builder,
-            partition_struct,
-            partition_spec.spec_id(),
-        );
+        let data_file_builder = DataFileWriterBuilder::new(rolling_builder);
         let mut writer = data_file_builder
-            .build()
+            .build(partition_key)
             .await
             .map_err(IcebergSinkError::from)?;
         writer
@@ -651,10 +656,11 @@ mod tests {
     }
 
     /// 3-row batch with two distinct `event_kind` values exercises the
-    /// `split_by_partition` fanout: one Parquet file per partition value
-    /// committed in a single transaction. We verify the on-disk layout
-    /// directly because iceberg-rust 0.7's snapshot summary doesn't always
-    /// populate `added-data-files` on the fast-append path.
+    /// `split_by_partition` fanout: one Parquet data file per partition
+    /// value committed in a single transaction. iceberg 0.9's
+    /// `MemoryCatalog` uses an in-memory `FileIO`, so nothing lands on the
+    /// real filesystem — instead we read the committed snapshot's manifests
+    /// and assert one data file per distinct `event_kind` partition value.
     #[tokio::test]
     async fn partition_fanout_writes_one_file_per_partition_value() {
         let tmp = tempdir().unwrap();
@@ -670,28 +676,42 @@ mod tests {
         sink.append(batch).await.unwrap();
 
         let table = sink.catalog.load_table(&sink.table).await.unwrap();
-        assert!(
-            table.metadata().current_snapshot().is_some(),
-            "expected a snapshot after a partitioned append",
-        );
+        let snapshot = table
+            .metadata()
+            .current_snapshot()
+            .expect("expected a snapshot after a partitioned append");
 
-        // The Hive-style partition layout written by `DefaultLocationGenerator`
-        // produces one directory per partition value under the table's
-        // `data/` prefix. Two distinct event_kind values → two dirs.
-        let data_dir = tmp.path().join("lineage").join("events").join("data");
-        let part_dirs: Vec<_> = std::fs::read_dir(&data_dir)
-            .expect("data dir must exist after partitioned write")
-            .filter_map(|e| e.ok())
-            .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
-            .map(|e| e.file_name().to_string_lossy().to_string())
-            .collect();
-        let mut sorted = part_dirs.clone();
-        sorted.sort();
+        // Walk the snapshot's manifests and collect every committed data
+        // file together with its (debug-rendered) partition tuple.
+        let manifest_list = snapshot
+            .load_manifest_list(table.file_io(), table.metadata())
+            .await
+            .expect("manifest list loads");
+
+        let mut partitions: Vec<String> = Vec::new();
+        for manifest_file in manifest_list.entries() {
+            let manifest = manifest_file
+                .load_manifest(table.file_io())
+                .await
+                .expect("manifest loads");
+            for entry in manifest.entries() {
+                partitions.push(format!("{:?}", entry.data_file().partition()));
+            }
+        }
+
         assert_eq!(
-            sorted,
-            vec!["event_kind=job".to_string(), "event_kind=run".to_string()],
-            "expected one partition dir per distinct event_kind, got {:?}",
-            part_dirs,
+            partitions.len(),
+            2,
+            "expected exactly one data file per partition group, got {:?}",
+            partitions,
+        );
+        partitions.sort();
+        partitions.dedup();
+        assert_eq!(
+            partitions.len(),
+            2,
+            "expected two distinct partition values (run, job), got {:?}",
+            partitions,
         );
     }
 
