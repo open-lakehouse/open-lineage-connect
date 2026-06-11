@@ -1,0 +1,28 @@
+# Copy to terraform.tfvars and edit, OR (preferred) drive these via the
+# deploy script's TF_VAR_* exports sourced from the repo-root .env.
+#
+# Sensitive values (unity_catalog_token, lineage_auth_token) should be passed
+# via TF_VAR_* env vars rather than committed here.
+
+aws_region  = "us-west-2"
+name_prefix = "open-lineage"
+
+# Independent per-service image tags.
+lineage_image_tag = "v0.1.0"
+table_image_tag   = "v0.1.0"
+
+# Unity Catalog write target.
+unity_catalog_url = "https://uc.openlakehousedemos.dev"
+uc_catalog        = "lineage"
+uc_schema         = "lineage"
+uc_table          = "events"
+
+# Auth: uc-jwt validates inbound tokens against UC; static uses
+# lineage_auth_token; disabled skips auth (local only).
+lineage_auth_mode = "uc-jwt"
+
+# HTTPS (optional): set both to terminate TLS on the NLB and create a Route 53
+# alias. Leave empty for a raw-TCP NLB on the lineage port.
+# domain_name      = "lineage.openlakehousedemos.dev"
+# hosted_zone_id   = "Z0123456789ABCDEFGHIJ"
+# cert_domain_name = "*.openlakehousedemos.dev"

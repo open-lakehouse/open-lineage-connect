@@ -236,3 +236,23 @@ collect-results lineage_output_dir:
     exit 1; \
   fi; \
   echo "Copied lineage table files to {{lineage_output_dir}}"
+
+# ----- ECS / Terraform deployment (terraform/ecs-lineage) --------------------
+
+# Build + push the Go lineage-service image to ECR (linux/arm64).
+ecr-push-lineage tag="":
+  bash scripts/ecr-push-lineage.sh "{{tag}}"
+
+# Build + push the Rust table-service image to ECR (linux/arm64).
+ecr-push-table tag="":
+  bash scripts/ecr-push-table.sh "{{tag}}"
+
+# Full deploy: build + push both images, then terraform apply + wait stable.
+deploy-ecs-lineage lineage_tag="" table_tag="":
+  bash scripts/deploy-ecs-lineage.sh "{{lineage_tag}}" "{{table_tag}}"
+
+ecs-lineage-outputs:
+  terraform -chdir=terraform/ecs-lineage output
+
+ecs-lineage-destroy:
+  terraform -chdir=terraform/ecs-lineage destroy

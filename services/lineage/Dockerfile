@@ -1,7 +1,8 @@
 FROM golang:1.26-alpine AS build
+ARG VERSION=dev
 WORKDIR /src
 COPY . .
-RUN CGO_ENABLED=0 go build -mod=vendor -o /lineage-service ./cmd/server
+RUN CGO_ENABLED=0 go build -mod=vendor -ldflags "-X main.version=${VERSION}" -o /lineage-service ./cmd/server
 
 FROM alpine:3.21
 COPY --from=build /lineage-service /lineage-service

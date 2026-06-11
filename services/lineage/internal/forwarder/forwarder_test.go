@@ -40,16 +40,16 @@ func TestForwarder_BatchesEvents(t *testing.T) {
 		if err := json.Unmarshal(body, &req); err == nil {
 			received.Add(int32(len(req.Events)))
 		}
-		resp := tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
+		resp := &tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
 	fwd := New(srv.URL, WithBatchSize(5), WithFlushMs(50), WithChanSize(100))
 
 	for i := 0; i < 10; i++ {
-		fwd.Forward(makeEvent("test"))
+		fwd.Forward("", makeEvent("test"))
 	}
 
 	// Wait for flush.
@@ -71,15 +71,15 @@ func TestForwarder_FlushOnTimer(t *testing.T) {
 		if err := json.Unmarshal(body, &req); err == nil {
 			received.Add(int32(len(req.Events)))
 		}
-		resp := tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
+		resp := &tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
 	fwd := New(srv.URL, WithBatchSize(1000), WithFlushMs(50))
 
-	fwd.Forward(makeEvent("timer-test"))
+	fwd.Forward("", makeEvent("timer-test"))
 
 	time.Sleep(200 * time.Millisecond)
 	fwd.Close()
@@ -102,16 +102,16 @@ func TestForwarder_GracefulShutdown(t *testing.T) {
 			total += int32(len(req.Events))
 			mu.Unlock()
 		}
-		resp := tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
+		resp := &tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
 	fwd := New(srv.URL, WithBatchSize(1000), WithFlushMs(10000))
 
 	for i := 0; i < 5; i++ {
-		fwd.Forward(makeEvent("shutdown-test"))
+		fwd.Forward("", makeEvent("shutdown-test"))
 	}
 
 	// Close should drain without waiting for the long flush interval.
@@ -126,6 +126,49 @@ func TestForwarder_GracefulShutdown(t *testing.T) {
 	}
 }
 
+func TestForwarder_GroupsByTokenAndForwardsAuthHeader(t *testing.T) {
+	var mu sync.Mutex
+	// authHeader -> total events received under that header.
+	byAuth := make(map[string]int)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		var req tablewriterv1.WriteBatchRequest
+		_ = json.Unmarshal(body, &req)
+		mu.Lock()
+		byAuth[r.Header.Get("Authorization")] += len(req.Events)
+		mu.Unlock()
+		resp := &tablewriterv1.WriteBatchResponse{Status: "ok", Written: int32(len(req.Events))}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer srv.Close()
+
+	fwd := New(srv.URL, WithBatchSize(1000), WithFlushMs(50), WithChanSize(100))
+
+	// Two distinct users plus one anonymous event.
+	fwd.Forward("jwt-alice", makeEvent("a"))
+	fwd.Forward("jwt-alice", makeEvent("a"))
+	fwd.Forward("jwt-bob", makeEvent("b"))
+	fwd.Forward("", makeEvent("anon"))
+
+	time.Sleep(200 * time.Millisecond)
+	fwd.Close()
+
+	mu.Lock()
+	defer mu.Unlock()
+	if byAuth["Bearer jwt-alice"] != 2 {
+		t.Errorf("alice events=%d want 2", byAuth["Bearer jwt-alice"])
+	}
+	if byAuth["Bearer jwt-bob"] != 1 {
+		t.Errorf("bob events=%d want 1", byAuth["Bearer jwt-bob"])
+	}
+	// Anonymous events carry no Authorization header.
+	if byAuth[""] != 1 {
+		t.Errorf("anon events (no auth header)=%d want 1", byAuth[""])
+	}
+}
+
 func TestForwarder_DropsWhenFull(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(5 * time.Second)
@@ -136,9 +179,9 @@ func TestForwarder_DropsWhenFull(t *testing.T) {
 	fwd := New(srv.URL, WithChanSize(2), WithBatchSize(1000), WithFlushMs(10000))
 
 	// Fill the channel (size=2) plus one extra that should be dropped.
-	fwd.Forward(makeEvent("a"))
-	fwd.Forward(makeEvent("b"))
-	fwd.Forward(makeEvent("drop-me"))
+	fwd.Forward("", makeEvent("a"))
+	fwd.Forward("", makeEvent("b"))
+	fwd.Forward("", makeEvent("drop-me"))
 
 	// The third should not block.
 	fwd.Close()

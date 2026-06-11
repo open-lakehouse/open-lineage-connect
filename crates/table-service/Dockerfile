@@ -27,8 +27,10 @@ RUN cargo build --release
 
 # Stage 3: Minimal runtime image.
 FROM debian:bookworm-slim
+ARG SERVICE_VERSION=dev
 RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
 COPY --from=build /src/target/release/table-service /table-service
 ENV TABLE_SERVICE_PORT=8091
+ENV SERVICE_VERSION=${SERVICE_VERSION}
 EXPOSE 8091
 ENTRYPOINT ["/table-service"]

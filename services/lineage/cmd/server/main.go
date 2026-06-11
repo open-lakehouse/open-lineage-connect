@@ -17,11 +17,16 @@ import (
 	"github.com/open-lakehouse/open-lineage-service/internal/service"
 )
 
+// version is stamped at build time via -ldflags "-X main.version=<tag>".
+var version = "dev"
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8090"
 	}
+
+	log.Printf("lineage service version %s starting", version)
 
 	svc := service.NewLineageService()
 
@@ -47,7 +52,7 @@ func main() {
 
 	rest := ingest.NewHandler(svc)
 	rest.Register(mux)
-	health.NewHandler(healthChecker).Register(mux)
+	health.NewHandler(healthChecker, version).Register(mux)
 
 	addr := ":" + port
 	log.Printf("lineage service listening on %s", addr)

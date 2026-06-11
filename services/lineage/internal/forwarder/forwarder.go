@@ -20,9 +20,17 @@ const (
 	defaultChanSize  = 1000
 )
 
+// entry pairs an event with the caller's bearer token so the background
+// flusher can group events by token and forward each group under that token's
+// Authorization header (per-user credential vending downstream).
+type entry struct {
+	token string
+	event *lineagev1.OpenLineageEvent
+}
+
 type Forwarder struct {
 	client  tablewriterv1connect.TableWriterServiceClient
-	ch      chan *lineagev1.OpenLineageEvent
+	ch      chan entry
 	done    chan struct{}
 	wg      sync.WaitGroup
 	batchSz int
@@ -47,7 +55,7 @@ func New(baseURL string, opts ...Option) *Forwarder {
 			baseURL,
 			connect.WithProtoJSON(),
 		),
-		ch:      make(chan *lineagev1.OpenLineageEvent, cfg.chanSize),
+		ch:      make(chan entry, cfg.chanSize),
 		done:    make(chan struct{}),
 		batchSz: cfg.batchSize,
 		flush:   time.Duration(cfg.flushMs) * time.Millisecond,
@@ -58,11 +66,12 @@ func New(baseURL string, opts ...Option) *Forwarder {
 	return f
 }
 
-// Forward enqueues an event for asynchronous delivery. It never blocks; if
-// the channel is full the event is dropped and a warning is logged.
-func (f *Forwarder) Forward(event *lineagev1.OpenLineageEvent) {
+// Forward enqueues an event (with the caller's bearer token) for asynchronous
+// delivery. It never blocks; if the channel is full the event is dropped and a
+// warning is logged. The signature matches service.EventCallback.
+func (f *Forwarder) Forward(token string, event *lineagev1.OpenLineageEvent) {
 	select {
-	case f.ch <- event:
+	case f.ch <- entry{token: token, event: event}:
 	default:
 		log.Printf("forwarder: channel full, dropping event")
 	}
@@ -80,47 +89,62 @@ func (f *Forwarder) run() {
 	ticker := time.NewTicker(f.flush)
 	defer ticker.Stop()
 
-	buf := make([]*lineagev1.OpenLineageEvent, 0, f.batchSz)
+	// Buffer events grouped by token so each flush forwards one WriteBatch per
+	// distinct caller, preserving per-user identity for downstream credential
+	// vending. total tracks the aggregate buffered count for the size trigger.
+	buf := make(map[string][]*lineagev1.OpenLineageEvent)
+	total := 0
+
+	flush := func() {
+		if total == 0 {
+			return
+		}
+		for token, events := range buf {
+			f.sendBatch(token, events)
+		}
+		buf = make(map[string][]*lineagev1.OpenLineageEvent)
+		total = 0
+	}
 
 	for {
 		select {
-		case evt := <-f.ch:
-			buf = append(buf, evt)
-			if len(buf) >= f.batchSz {
-				f.sendBatch(buf)
-				buf = buf[:0]
+		case e := <-f.ch:
+			buf[e.token] = append(buf[e.token], e.event)
+			total++
+			if total >= f.batchSz {
+				flush()
 			}
 		case <-ticker.C:
-			if len(buf) > 0 {
-				f.sendBatch(buf)
-				buf = buf[:0]
-			}
+			flush()
 		case <-f.done:
-			// Drain remaining events from the channel.
+			// Drain remaining events from the channel, then flush.
 			for {
 				select {
-				case evt := <-f.ch:
-					buf = append(buf, evt)
+				case e := <-f.ch:
+					buf[e.token] = append(buf[e.token], e.event)
+					total++
 				default:
-					goto drained
+					flush()
+					return
 				}
 			}
-		drained:
-			if len(buf) > 0 {
-				f.sendBatch(buf)
-			}
-			return
 		}
 	}
 }
 
-func (f *Forwarder) sendBatch(events []*lineagev1.OpenLineageEvent) {
+func (f *Forwarder) sendBatch(token string, events []*lineagev1.OpenLineageEvent) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	req := connect.NewRequest(&tablewriterv1.WriteBatchRequest{
 		Events: events,
 	})
+	// Forward the caller's bearer token so the table-service can vend
+	// per-user Unity Catalog credentials. Empty token => no header (anonymous
+	// / UC-auth-disabled path).
+	if token != "" {
+		req.Header().Set("Authorization", "Bearer "+token)
+	}
 
 	resp, err := f.client.WriteBatch(ctx, req)
 	if err != nil {

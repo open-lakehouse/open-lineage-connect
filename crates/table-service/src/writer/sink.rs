@@ -21,6 +21,18 @@ pub trait TableSink: Send + Sync {
     /// service layer relies on this so that an all-`event=None` `WriteBatch`
     /// reports `written: 0` without creating an empty Delta/Iceberg snapshot.
     async fn append(&self, batch: RecordBatch) -> Result<(), SinkError>;
+
+    /// Append `batch`, optionally using a per-request bearer token (the
+    /// caller's Unity Catalog JWT, forwarded from the lineage service) for
+    /// credential vending. The default ignores the token and delegates to
+    /// [`append`](Self::append); only the Unity Catalog sink overrides it.
+    async fn append_with_token(
+        &self,
+        batch: RecordBatch,
+        _token: Option<&str>,
+    ) -> Result<(), SinkError> {
+        self.append(batch).await
+    }
 }
 
 /// Per-sink error envelope. The string payload carries the upstream error's
@@ -33,6 +45,9 @@ pub enum SinkError {
 
     #[error("iceberg: {0}")]
     Iceberg(String),
+
+    #[error("unity: {0}")]
+    Unity(String),
 }
 
 #[cfg(test)]

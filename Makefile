@@ -2,11 +2,15 @@ IMAGE_NAME         ?= lineage-service
 TABLE_IMAGE_NAME   ?= table-service
 IMAGE_TAG          ?= latest
 
+TF_DIR := terraform/ecs-lineage
+
 .PHONY: generate build vendor test coverage lint clean \
         docker-build docker-run \
         proto-export rust-build rust-test \
         docker-build-table docker-compose-up docker-compose-down \
-        spark-plugin-build spark-plugin-test spark-plugin-clean spark-connect-e2e
+        spark-plugin-build spark-plugin-test spark-plugin-clean spark-connect-e2e \
+        ecr-push-lineage ecr-push-table deploy-ecs-lineage \
+        ecs-lineage-outputs ecs-lineage-destroy
 
 generate:
 	buf generate
@@ -69,6 +73,25 @@ spark-plugin-clean:
 # requires java 17, python3, sbt, and $SPARK_HOME (or network to download Spark).
 spark-connect-e2e:
 	./scripts/spark-connect-e2e.sh
+
+# ----- ECS / Terraform deployment (terraform/ecs-lineage) --------------------
+# Build + push images to ECR (linux/arm64). Tags come from .env
+# (LINEAGE_IMAGE_TAG / TABLE_IMAGE_TAG) unless overridden on the CLI.
+ecr-push-lineage:
+	./scripts/ecr-push-lineage.sh $(LINEAGE_IMAGE_TAG)
+
+ecr-push-table:
+	./scripts/ecr-push-table.sh $(TABLE_IMAGE_TAG)
+
+# Full deploy: build + push both images, then terraform apply.
+deploy-ecs-lineage:
+	./scripts/deploy-ecs-lineage.sh
+
+ecs-lineage-outputs:
+	terraform -chdir=$(TF_DIR) output
+
+ecs-lineage-destroy:
+	terraform -chdir=$(TF_DIR) destroy
 
 clean:
 	rm -rf services/lineage/gen services/lineage/coverage.out crates/table-service/proto-export
