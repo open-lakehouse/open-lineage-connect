@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -259,7 +260,7 @@ func TestIngestBatch_Empty(t *testing.T) {
 func TestIngestBatch_InvokesOnEventCallbacks(t *testing.T) {
 	svc := service.NewLineageService()
 	var callbackCount int
-	svc.OnEvent(func(*lineagev1.OpenLineageEvent) {
+	svc.OnEvent(func(string, *lineagev1.OpenLineageEvent) {
 		callbackCount++
 	})
 
@@ -275,6 +276,36 @@ func TestIngestBatch_InvokesOnEventCallbacks(t *testing.T) {
 	}
 	if callbackCount != 2 {
 		t.Fatalf("callbackCount=%d want=2", callbackCount)
+	}
+}
+
+func TestIngest_ForwardsCallerTokenToCallback(t *testing.T) {
+	env := newTestEnv(t)
+
+	var mu sync.Mutex
+	var tokens []string
+	env.svc.OnEvent(func(token string, _ *lineagev1.OpenLineageEvent) {
+		mu.Lock()
+		tokens = append(tokens, token)
+		mu.Unlock()
+	})
+
+	client := env.client()
+	_, err := client.IngestEvent(context.Background(), authedRequest(&lineagev1.IngestEventRequest{
+		Event: &lineagev1.RunEvent{EventType: "START", EventTime: timestamppb.Now(), Producer: "test"},
+	}))
+	if err != nil {
+		t.Fatalf("IngestEvent failed: %v", err)
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(tokens) != 1 {
+		t.Fatalf("callback invoked %d times, want 1", len(tokens))
+	}
+	// Static auth mode strips the "Bearer " prefix, leaving the raw token.
+	if tokens[0] != "valid-token" {
+		t.Errorf("forwarded token=%q want %q", tokens[0], "valid-token")
 	}
 }
 
@@ -665,7 +696,7 @@ func TestIngestOpenLineageBatch_Empty(t *testing.T) {
 func TestIngestOpenLineageBatch_InvokesOnEventCallbacks(t *testing.T) {
 	svc := service.NewLineageService()
 	var callbackCount int
-	svc.OnEvent(func(*lineagev1.OpenLineageEvent) {
+	svc.OnEvent(func(string, *lineagev1.OpenLineageEvent) {
 		callbackCount++
 	})
 

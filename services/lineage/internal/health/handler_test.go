@@ -19,7 +19,7 @@ func (c checkerStub) Ready(context.Context) error {
 
 func TestHealthHandler_NoChecker_ReturnsOK(t *testing.T) {
 	mux := http.NewServeMux()
-	NewHandler(nil).Register(mux)
+	NewHandler(nil, "v1.2.3").Register(mux)
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
@@ -40,11 +40,35 @@ func TestHealthHandler_NoChecker_ReturnsOK(t *testing.T) {
 	if body["status"] != "ok" {
 		t.Fatalf("status=%q want=ok", body["status"])
 	}
+	if body["version"] != "v1.2.3" {
+		t.Fatalf("version=%q want=v1.2.3", body["version"])
+	}
+}
+
+func TestHealthHandler_EmptyVersion_DefaultsToDev(t *testing.T) {
+	mux := http.NewServeMux()
+	NewHandler(nil, "").Register(mux)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/health")
+	if err != nil {
+		t.Fatalf("GET /health failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var body map[string]string
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body["version"] != "dev" {
+		t.Fatalf("version=%q want=dev", body["version"])
+	}
 }
 
 func TestHealthHandler_CheckerFailure_ReturnsUnavailable(t *testing.T) {
 	mux := http.NewServeMux()
-	NewHandler(checkerStub{err: errors.New("sidecar down")}).Register(mux)
+	NewHandler(checkerStub{err: errors.New("sidecar down")}, "v1").Register(mux)
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 

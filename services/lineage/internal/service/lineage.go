@@ -8,10 +8,14 @@ import (
 
 	lineagev1 "github.com/open-lakehouse/open-lineage-service/gen/lineage/v1"
 	"github.com/open-lakehouse/open-lineage-service/gen/lineage/v1/lineagev1connect"
+	"github.com/open-lakehouse/open-lineage-service/internal/interceptor"
 )
 
-// EventCallback is invoked after every event is stored.
-type EventCallback func(*lineagev1.OpenLineageEvent)
+// EventCallback is invoked after every event is stored. token is the caller's
+// bearer token (a Unity Catalog JWT in uc-jwt auth mode), forwarded downstream
+// so the table-service can vend per-user credentials; it is "" for events that
+// arrive without authentication (e.g. the REST adapter).
+type EventCallback func(token string, event *lineagev1.OpenLineageEvent)
 
 type LineageService struct {
 	lineagev1connect.UnimplementedLineageServiceHandler
@@ -34,12 +38,13 @@ func (s *LineageService) OnEvent(cb EventCallback) {
 }
 
 // StoreEvent appends a single OpenLineageEvent to the in-memory store.
-// This is the direct method used by the REST ingestion adapter.
+// This is the direct method used by the REST ingestion adapter, which carries
+// no authenticated caller token.
 func (s *LineageService) StoreEvent(event *lineagev1.OpenLineageEvent) {
-	s.storeOpenLineageEvent(event)
+	s.storeOpenLineageEvent("", event)
 }
 
-func (s *LineageService) storeOpenLineageEvent(event *lineagev1.OpenLineageEvent) {
+func (s *LineageService) storeOpenLineageEvent(token string, event *lineagev1.OpenLineageEvent) {
 	s.mu.Lock()
 	s.events = append(s.events, event)
 	cbs := make([]EventCallback, len(s.callbacks))
@@ -47,7 +52,7 @@ func (s *LineageService) storeOpenLineageEvent(event *lineagev1.OpenLineageEvent
 	s.mu.Unlock()
 
 	for _, cb := range cbs {
-		cb(event)
+		cb(token, event)
 	}
 }
 
@@ -74,14 +79,14 @@ func (s *LineageService) Events() []*lineagev1.RunEvent {
 }
 
 func (s *LineageService) IngestEvent(
-	_ context.Context,
+	ctx context.Context,
 	req *connect.Request[lineagev1.IngestEventRequest],
 ) (*connect.Response[lineagev1.IngestEventResponse], error) {
 	if req.Msg.Event == nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, nil)
 	}
 
-	s.StoreEvent(&lineagev1.OpenLineageEvent{
+	s.storeOpenLineageEvent(interceptor.TokenFromContext(ctx), &lineagev1.OpenLineageEvent{
 		Event: &lineagev1.OpenLineageEvent_RunEvent{RunEvent: req.Msg.Event},
 	})
 
@@ -91,11 +96,12 @@ func (s *LineageService) IngestEvent(
 }
 
 func (s *LineageService) IngestBatch(
-	_ context.Context,
+	ctx context.Context,
 	req *connect.Request[lineagev1.IngestBatchRequest],
 ) (*connect.Response[lineagev1.IngestBatchResponse], error) {
+	token := interceptor.TokenFromContext(ctx)
 	for _, e := range req.Msg.Events {
-		s.storeOpenLineageEvent(&lineagev1.OpenLineageEvent{
+		s.storeOpenLineageEvent(token, &lineagev1.OpenLineageEvent{
 			Event: &lineagev1.OpenLineageEvent_RunEvent{RunEvent: e},
 		})
 	}
@@ -107,12 +113,13 @@ func (s *LineageService) IngestBatch(
 }
 
 func (s *LineageService) IngestOpenLineageBatch(
-	_ context.Context,
+	ctx context.Context,
 	req *connect.Request[lineagev1.IngestOpenLineageBatchRequest],
 ) (*connect.Response[lineagev1.IngestOpenLineageBatchResponse], error) {
+	token := interceptor.TokenFromContext(ctx)
 	received := int32(len(req.Msg.Events))
 	for _, evt := range req.Msg.Events {
-		s.storeOpenLineageEvent(evt)
+		s.storeOpenLineageEvent(token, evt)
 	}
 
 	return connect.NewResponse(&lineagev1.IngestOpenLineageBatchResponse{

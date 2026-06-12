@@ -32,6 +32,32 @@ impl Default for DeltaConfig {
     }
 }
 
+/// Configuration for writing into a Unity Catalog-managed Delta table.
+///
+/// The sink resolves the table's `storage_location` and vends temporary
+/// `READ_WRITE` credentials from the UC REST API (mirroring the read-side
+/// `query-sidecar` flow), then writes Delta with those credentials.
+#[derive(Debug, Clone)]
+pub struct UnityConfig {
+    /// Base URL of the Unity Catalog server, e.g.
+    /// `https://uc.openlakehousedemos.dev` (no trailing slash).
+    pub url: String,
+    /// Fallback service bearer token used when no per-request caller token is
+    /// forwarded (and ignored entirely when UC authorization is disabled).
+    pub token: Option<String>,
+    pub catalog: String,
+    pub schema: String,
+    pub table: String,
+}
+
+impl UnityConfig {
+    /// Fully-qualified table name in `catalog.schema.table` form, as expected
+    /// by the UC REST `GET /tables/{full_name}` endpoint.
+    pub fn full_name(&self) -> String {
+        format!("{}.{}.{}", self.catalog, self.schema, self.table)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct IcebergConfig {
     /// Iceberg REST catalog URI. For Lakekeeper this looks like
@@ -60,6 +86,9 @@ pub struct Config {
     pub storage: StorageBackend,
     pub delta: DeltaConfig,
     pub iceberg: Option<IcebergConfig>,
+    /// Present when `DELTA_STORAGE=unity`: the Delta sink writes into a
+    /// UC-managed table using vended credentials.
+    pub unity: Option<UnityConfig>,
     pub storage_options: HashMap<String, String>,
 }
 
@@ -71,6 +100,7 @@ impl Default for Config {
             storage: StorageBackend::Local,
             delta: DeltaConfig::default(),
             iceberg: None,
+            unity: None,
             storage_options: HashMap::new(),
         }
     }
@@ -92,8 +122,7 @@ impl Config {
             _ => StorageBackend::Local,
         };
 
-        let table_path =
-            env::var("DELTA_TABLE_PATH").unwrap_or_else(|_| "/data/events".into());
+        let table_path = env::var("DELTA_TABLE_PATH").unwrap_or_else(|_| "/data/events".into());
 
         let partition_cols = env::var("DELTA_PARTITION_COLS")
             .unwrap_or_else(|_| "event_kind".into())
@@ -117,6 +146,12 @@ impl Config {
             None
         };
 
+        let unity = if storage == StorageBackend::Unity {
+            Some(unity_from_env())
+        } else {
+            None
+        };
+
         Config {
             port,
             sinks,
@@ -126,6 +161,7 @@ impl Config {
                 partition_cols,
             },
             iceberg,
+            unity,
             storage_options,
         }
     }
@@ -158,9 +194,29 @@ fn parse_sinks(raw: &str) -> Vec<SinkKind> {
     }
 }
 
+fn unity_from_env() -> UnityConfig {
+    let url = env::var("UNITY_CATALOG_URL")
+        .unwrap_or_else(|_| "http://localhost:8080".into())
+        .trim_end_matches('/')
+        .to_string();
+    let token = env::var("UNITY_CATALOG_TOKEN")
+        .ok()
+        .filter(|s| !s.is_empty());
+    let catalog = env::var("UC_CATALOG").unwrap_or_else(|_| "lineage".into());
+    let schema = env::var("UC_SCHEMA").unwrap_or_else(|_| "lineage".into());
+    let table = env::var("UC_TABLE").unwrap_or_else(|_| "events".into());
+    UnityConfig {
+        url,
+        token,
+        catalog,
+        schema,
+        table,
+    }
+}
+
 fn iceberg_from_env() -> IcebergConfig {
-    let catalog_uri = env::var("ICEBERG_CATALOG_URI")
-        .unwrap_or_else(|_| "http://localhost:8181/catalog".into());
+    let catalog_uri =
+        env::var("ICEBERG_CATALOG_URI").unwrap_or_else(|_| "http://localhost:8181/catalog".into());
     let warehouse = env::var("ICEBERG_WAREHOUSE").unwrap_or_else(|_| "lineage".into());
     let namespace = env::var("ICEBERG_NAMESPACE").unwrap_or_else(|_| "lineage".into());
     let table = env::var("ICEBERG_TABLE").unwrap_or_else(|_| "events".into());
@@ -201,6 +257,23 @@ mod tests {
         assert!(matches!(StorageBackend::S3, StorageBackend::S3));
         assert!(matches!(StorageBackend::Unity, StorageBackend::Unity));
         assert!(matches!(StorageBackend::Local, StorageBackend::Local));
+    }
+
+    #[test]
+    fn test_default_has_no_unity_config() {
+        assert!(Config::default().unity.is_none());
+    }
+
+    #[test]
+    fn test_unity_full_name() {
+        let uc = UnityConfig {
+            url: "https://uc.example.dev".into(),
+            token: Some("t".into()),
+            catalog: "lineage".into(),
+            schema: "ol".into(),
+            table: "events".into(),
+        };
+        assert_eq!(uc.full_name(), "lineage.ol.events");
     }
 
     #[test]

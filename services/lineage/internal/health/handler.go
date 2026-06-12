@@ -19,10 +19,16 @@ type Checker interface {
 // Handler serves the /health endpoint.
 type Handler struct {
 	checker Checker
+	version string
 }
 
-func NewHandler(checker Checker) *Handler {
-	return &Handler{checker: checker}
+// NewHandler builds a /health handler. version is surfaced in the JSON body
+// so deployments can confirm which build is running.
+func NewHandler(checker Checker, version string) *Handler {
+	if version == "" {
+		version = "dev"
+	}
+	return &Handler{checker: checker, version: version}
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {
@@ -35,14 +41,15 @@ func (h *Handler) handleHealth(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		if err := h.checker.Ready(ctx); err != nil {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{
-				"status": "unhealthy",
-				"error":  err.Error(),
+				"status":  "unhealthy",
+				"version": h.version,
+				"error":   err.Error(),
 			})
 			return
 		}
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": h.version})
 }
 
 // SidecarChecker validates that the Rust sidecar health endpoint is reachable.

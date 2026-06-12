@@ -31,6 +31,21 @@ impl DeltaWriter {
         }
     }
 
+    /// Construct a writer for an explicit table URI + storage options. Used by
+    /// the Unity Catalog sink, which resolves the table location and vends
+    /// credentials per write rather than reading them from static config.
+    pub fn from_parts(
+        table_uri: String,
+        storage_options: HashMap<String, String>,
+        partition_cols: Vec<String>,
+    ) -> Self {
+        Self {
+            table_uri,
+            storage_options,
+            partition_cols,
+        }
+    }
+
     pub async fn append(&self, batch: RecordBatch) -> Result<(), DeltaWriteError> {
         if batch.num_rows() == 0 {
             return Ok(());
@@ -51,8 +66,8 @@ impl DeltaWriter {
     }
 
     async fn open_or_create_table(&self) -> Result<DeltaTable, DeltaWriteError> {
-        let table_url =
-            ensure_table_uri(&self.table_uri).map_err(|e| DeltaWriteError::Create(e.to_string()))?;
+        let table_url = ensure_table_uri(&self.table_uri)
+            .map_err(|e| DeltaWriteError::Create(e.to_string()))?;
         let mut table = DeltaTableBuilder::from_url(table_url)
             .map_err(|e| DeltaWriteError::Create(e.to_string()))?
             .with_storage_options(self.storage_options.clone())
